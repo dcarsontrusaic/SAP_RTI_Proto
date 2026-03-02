@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <title> Project Preview </title>
+    <script src="https://ui5.sap.com/1.136.9/resources/sap-ui-core.js" 
+            id="sap-ui-bootstrap"
+            data-sap-ui-theme="sap_horizon"
+            data-sap-ui-bindingSyntax="complex" 
+            data-sap-ui-xx-bindingSyntax="complex"
+            data-sap-ui-resourceroots='{"assets": "assets"}' 
+            data-sap-ui-libs="sap.m,sap.uxap,sap.ui.layout,sap.f">
+    </script>
+    <link rel="stylesheet" href="assets/preview.css">
+</head>
+
+<body id="body" class="sapUiBody">
+    <script>
+        "use strict";
+        sap.ui.localResources("assets");
+        (function (jQuery, App, Page) {
+            sap.ui.getCore().attachInit(function () {
+                sap.ui.define([
+                    "sap/ui/core/mvc/Controller",
+                    "sap/ui/model/json/JSONModel"
+                ], function (Controller, JSONModel) {
+                    return Controller.extend("PreviewController", {
+                        onInit: function () {
+
+                            const data = {"Services":[{"ServiceName":"EmployeeService","DetailsURL":"./api/employee/","Metadata":"./api/employee/$metadata","Entities":[{"Name":"MyRequests","URL":"./api/employee/MyRequests","FioriURL":"$fiori-preview/EmployeeService/MyRequests#preview-app"},{"Name":"MyStatusHistory","URL":"./api/employee/MyStatusHistory","FioriURL":"$fiori-preview/EmployeeService/MyStatusHistory#preview-app"},{"Name":"MyReports","URL":"./api/employee/MyReports","FioriURL":"$fiori-preview/EmployeeService/MyReports#preview-app"}],"EntitiesCount":3},{"ServiceName":"ApproverService","DetailsURL":"./api/approver/","Metadata":"./api/approver/$metadata","Entities":[{"Name":"Requests","URL":"./api/approver/Requests","FioriURL":"$fiori-preview/ApproverService/Requests#preview-app"},{"Name":"StatusHistory","URL":"./api/approver/StatusHistory","FioriURL":"$fiori-preview/ApproverService/StatusHistory#preview-app"},{"Name":"Users","URL":"./api/approver/Users","FioriURL":"$fiori-preview/ApproverService/Users#preview-app"}],"EntitiesCount":3},{"ServiceName":"AdminService","DetailsURL":"./api/admin/","Metadata":"./api/admin/$metadata","Entities":[{"Name":"AllRequests","URL":"./api/admin/AllRequests","FioriURL":"$fiori-preview/AdminService/AllRequests#preview-app"},{"Name":"StatusHistory","URL":"./api/admin/StatusHistory","FioriURL":"$fiori-preview/AdminService/StatusHistory#preview-app"},{"Name":"Reports","URL":"./api/admin/Reports","FioriURL":"$fiori-preview/AdminService/Reports#preview-app"},{"Name":"Users","URL":"./api/admin/Users","FioriURL":"$fiori-preview/AdminService/Users#preview-app"}],"EntitiesCount":4}]}
+                            this.getView().setModel(new JSONModel(data));
+                        }
+                    });
+                });
+                var oApp = new App()
+                var previewView = sap.ui.view({
+                    viewName: "assets.Preview",
+                    type: sap.ui.core.mvc.ViewType.XML
+                });
+                oApp.addPage(new Page({
+                    content: [previewView],
+                    showHeader: false
+                })).placeAt("content");
+            });
+
+        }(jQuery, sap.m.App, sap.m.Page));
+    </script>
+    <div id="content"></div>
+</body>
+
+</html>

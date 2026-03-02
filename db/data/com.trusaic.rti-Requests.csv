@@ -1,0 +1,6 @@
+ID;requestType;comparisonGroup;justification;status;submittedAt;lastUpdatedAt;approvedAt;deniedAt;denialReason;payparityValidationSummary;completedAt;employee_employeeId;approver_employeeId
+a1b2c3d4-0001-4000-8000-000000000001;Individual Pay Gap;Senior Engineers - US;Annual review comparison;Completed;2025-01-15T09:00:00Z;2025-01-22T14:00:00Z;2025-01-18T10:30:00Z;;;Validated - no flags;2025-01-22T14:00:00Z;EMP001;APR001
+a1b2c3d4-0002-4000-8000-000000000002;Pay Level Comparison;Marketing Managers - US;Promotion consideration;Approved;2025-02-01T11:00:00Z;2025-02-05T09:00:00Z;2025-02-05T09:00:00Z;;;;2025-02-05T09:00:00Z;EMP002;APR001
+a1b2c3d4-0003-4000-8000-000000000003;Individual Pay Gap;Finance Analysts - Midwest;;UnderReview;2025-02-10T14:30:00Z;2025-02-12T08:00:00Z;;;;Validated - minor flag: small comparison group;;EMP003;
+a1b2c3d4-0004-4000-8000-000000000004;Pay Level Comparison;Engineers - West Coast;Equity concern;Denied;2025-01-20T10:00:00Z;2025-01-25T16:00:00Z;;2025-01-25T16:00:00Z;Comparison group too narrow - please resubmit with broader parameters;Flagged - comparison group below minimum threshold;;EMP001;APR002
+a1b2c3d4-0005-4000-8000-000000000005;Individual Pay Gap;Marketing Associates - US;;Submitted;2025-02-15T08:45:00Z;2025-02-15T08:45:00Z;;;;;;;EMP002;

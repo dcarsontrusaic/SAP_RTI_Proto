@@ -1,0 +1,7 @@
+employeeId,name,email,role,department,location
+EMP001,Alice Chen,alice.chen@trusaic.com,Employee,Engineering,Los Angeles
+EMP002,Bob Martinez,bob.martinez@trusaic.com,Employee,Marketing,New York
+EMP003,Carol Davis,carol.davis@trusaic.com,Employee,Finance,Chicago
+APR001,Diana Patel,diana.patel@trusaic.com,Approver,HR,Los Angeles
+APR002,Erik Johansson,erik.johansson@trusaic.com,Approver,Compensation,New York
+ADM001,Fatima Al-Rashid,fatima.alrashid@trusaic.com,Admin,HR,Los Angeles

@@ -1,0 +1,79 @@
+{
+  "_version": "1.65.0",
+  "sap.app": {
+    "id": "com.trusaic.rti.home",
+    "type": "application",
+    "title": "Pay Transparency — Right to Information",
+    "applicationVersion": {
+      "version": "1.0.0"
+    },
+    "dataSources": {
+      "employeeService": {
+        "uri": "/api/employee/",
+        "type": "OData",
+        "settings": {
+          "odataVersion": "4.0"
+        }
+      },
+      "approverService": {
+        "uri": "/api/approver/",
+        "type": "OData",
+        "settings": {
+          "odataVersion": "4.0"
+        }
+      },
+      "adminService": {
+        "uri": "/api/admin/",
+        "type": "OData",
+        "settings": {
+          "odataVersion": "4.0"
+        }
+      }
+    }
+  },
+  "sap.ui5": {
+    "rootView": {
+      "viewName": "com.trusaic.rti.home.view.Home",
+      "type": "XML",
+      "id": "homeView"
+    },
+    "models": {
+      "": {
+        "dataSource": "employeeService",
+        "settings": {
+          "synchronizationMode": "None",
+          "operationMode": "Server",
+          "autoExpandSelect": true
+        }
+      },
+      "approver": {
+        "dataSource": "approverService",
+        "settings": {
+          "synchronizationMode": "None",
+          "operationMode": "Server",
+          "autoExpandSelect": true
+        }
+      },
+      "admin": {
+        "dataSource": "adminService",
+        "settings": {
+          "synchronizationMode": "None",
+          "operationMode": "Server",
+          "autoExpandSelect": true
+        }
+      }
+    },
+    "resources": {
+      "css": []
+    },
+    "dependencies": {
+      "minUI5Version": "1.120.0",
+      "libs": {
+        "sap.m": {},
+        "sap.ui.core": {},
+        "sap.f": {},
+        "sap.ui.layout": {}
+      }
+    }
+  }
+}
