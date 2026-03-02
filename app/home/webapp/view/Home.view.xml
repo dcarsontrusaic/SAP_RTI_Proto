@@ -7,112 +7,108 @@
     controllerName="com.trusaic.rti.home.controller.Home"
     displayBlock="true">
 
-    <App id="app">
-        <pages>
-            <Page title="Pay Transparency — Right to Information"
-                  showNavButton="false">
-                <headerContent>
-                    <Title text="{/userRole}" class="sapUiSmallMarginEnd"/>
-                </headerContent>
-                <content>
-                    <layout:VerticalLayout class="sapUiMediumMargin" width="100%">
+    <Page title="Pay Transparency — Right to Information"
+          showNavButton="false">
+        <headerContent>
+            <Title text="{/userRole}" class="sapUiSmallMarginEnd"/>
+        </headerContent>
+        <content>
+            <layout:VerticalLayout class="sapUiMediumMargin" width="100%">
 
-                        <!-- Welcome Message -->
-                        <Title text="Welcome" level="H2" class="sapUiMediumMarginBottom"/>
-                        <Text text="Select an action below to get started." class="sapUiMediumMarginBottom"/>
+                <!-- Welcome Message -->
+                <Title text="Welcome" level="H2" class="sapUiMediumMarginBottom"/>
+                <Text text="Select an action below to get started." class="sapUiMediumMarginBottom"/>
 
-                        <!-- Cards Container -->
-                        <layout:HorizontalLayout allowWrapping="true" class="sapUiMediumMarginTop">
+                <!-- Cards Container -->
+                <layout:HorizontalLayout allowWrapping="true" class="sapUiMediumMarginTop">
 
-                            <!-- Employee Card: Request a Report -->
-                            <f:Card class="sapUiSmallMarginEnd sapUiSmallMarginBottom" width="320px">
-                                <f:header>
-                                    <card:Header
-                                        title="Request a Report"
-                                        subtitle="Submit a new RTI request"
-                                        iconSrc="sap-icon://request"/>
-                                </f:header>
-                                <f:content>
-                                    <VBox class="sapUiSmallMargin">
-                                        <Text text="Start a new Right to Information request to compare your pay data against your peers."/>
-                                        <Button text="New Request"
-                                                type="Emphasized"
-                                                press=".onNewRequest"
-                                                class="sapUiSmallMarginTop"/>
-                                    </VBox>
-                                </f:content>
-                            </f:Card>
+                    <!-- Employee Card: Request a Report -->
+                    <f:Card class="sapUiSmallMarginEnd sapUiSmallMarginBottom" width="320px">
+                        <f:header>
+                            <card:Header
+                                title="Request a Report"
+                                subtitle="Submit a new RTI request"
+                                iconSrc="sap-icon://request"/>
+                        </f:header>
+                        <f:content>
+                            <VBox class="sapUiSmallMargin">
+                                <Text text="Start a new Right to Information request to compare your pay data against your peers."/>
+                                <Button text="New Request"
+                                        type="Emphasized"
+                                        press=".onNewRequest"
+                                        class="sapUiSmallMarginTop"/>
+                            </VBox>
+                        </f:content>
+                    </f:Card>
 
-                            <!-- Employee Card: My Requests -->
-                            <f:Card class="sapUiSmallMarginEnd sapUiSmallMarginBottom" width="320px">
-                                <f:header>
-                                    <card:Header
-                                        title="My Requests"
-                                        subtitle="{/myRequestCount} total requests"
-                                        iconSrc="sap-icon://list"/>
-                                </f:header>
-                                <f:content>
-                                    <VBox class="sapUiSmallMargin">
-                                        <Text text="View the status of all your submitted RTI requests."/>
-                                        <Button text="View My Requests"
-                                                type="Default"
-                                                press=".onViewMyRequests"
-                                                class="sapUiSmallMarginTop"/>
-                                    </VBox>
-                                </f:content>
-                            </f:Card>
+                    <!-- Employee Card: My Requests -->
+                    <f:Card class="sapUiSmallMarginEnd sapUiSmallMarginBottom" width="320px">
+                        <f:header>
+                            <card:Header
+                                title="My Requests"
+                                subtitle="{/myRequestCount} total requests"
+                                iconSrc="sap-icon://list"/>
+                        </f:header>
+                        <f:content>
+                            <VBox class="sapUiSmallMargin">
+                                <Text text="View the status of all your submitted RTI requests."/>
+                                <Button text="View My Requests"
+                                        type="Default"
+                                        press=".onViewMyRequests"
+                                        class="sapUiSmallMarginTop"/>
+                            </VBox>
+                        </f:content>
+                    </f:Card>
 
-                            <!-- Approver Card (role-gated) -->
-                            <f:Card class="sapUiSmallMarginEnd sapUiSmallMarginBottom"
-                                    width="320px"
-                                    visible="{/isApprover}">
-                                <f:header>
-                                    <card:Header
-                                        title="Pending Approvals"
-                                        subtitle="{/pendingApprovalCount} awaiting review"
-                                        iconSrc="sap-icon://approvals"/>
-                                </f:header>
-                                <f:content>
-                                    <VBox class="sapUiSmallMargin">
-                                        <Text text="Review and act on RTI requests submitted by employees."/>
-                                        <Button text="Open Approval Queue"
-                                                type="Attention"
-                                                press=".onOpenApprovals"
-                                                class="sapUiSmallMarginTop"/>
-                                    </VBox>
-                                </f:content>
-                            </f:Card>
+                    <!-- Approver Card (role-gated) -->
+                    <f:Card class="sapUiSmallMarginEnd sapUiSmallMarginBottom"
+                            width="320px"
+                            visible="{/isApprover}">
+                        <f:header>
+                            <card:Header
+                                title="Pending Approvals"
+                                subtitle="{/pendingApprovalCount} awaiting review"
+                                iconSrc="sap-icon://approvals"/>
+                        </f:header>
+                        <f:content>
+                            <VBox class="sapUiSmallMargin">
+                                <Text text="Review and act on RTI requests submitted by employees."/>
+                                <Button text="Open Approval Queue"
+                                        type="Attention"
+                                        press=".onOpenApprovals"
+                                        class="sapUiSmallMarginTop"/>
+                            </VBox>
+                        </f:content>
+                    </f:Card>
 
-                            <!-- Admin Card (role-gated) -->
-                            <f:Card class="sapUiSmallMarginEnd sapUiSmallMarginBottom"
-                                    width="320px"
-                                    visible="{/isAdmin}">
-                                <f:header>
-                                    <card:Header
-                                        title="Admin Dashboard"
-                                        subtitle="Organization-wide overview"
-                                        iconSrc="sap-icon://dashboard"/>
-                                </f:header>
-                                <f:content>
-                                    <VBox class="sapUiSmallMargin">
-                                        <layout:HorizontalLayout class="sapUiSmallMarginBottom">
-                                            <ObjectNumber number="{/totalRequests}" unit="Total" class="sapUiSmallMarginEnd"/>
-                                            <ObjectNumber number="{/pendingRequests}" unit="Pending" state="Warning" class="sapUiSmallMarginEnd"/>
-                                            <ObjectNumber number="{/completedRequests}" unit="Completed" state="Success"/>
-                                        </layout:HorizontalLayout>
-                                        <Button text="Open Dashboard"
-                                                type="Default"
-                                                press=".onOpenDashboard"
-                                                class="sapUiSmallMarginTop"/>
-                                    </VBox>
-                                </f:content>
-                            </f:Card>
+                    <!-- Admin Card (role-gated) -->
+                    <f:Card class="sapUiSmallMarginEnd sapUiSmallMarginBottom"
+                            width="320px"
+                            visible="{/isAdmin}">
+                        <f:header>
+                            <card:Header
+                                title="Admin Dashboard"
+                                subtitle="Organization-wide overview"
+                                iconSrc="sap-icon://dashboard"/>
+                        </f:header>
+                        <f:content>
+                            <VBox class="sapUiSmallMargin">
+                                <layout:HorizontalLayout class="sapUiSmallMarginBottom">
+                                    <ObjectNumber number="{/totalRequests}" unit="Total" class="sapUiSmallMarginEnd"/>
+                                    <ObjectNumber number="{/pendingRequests}" unit="Pending" state="Warning" class="sapUiSmallMarginEnd"/>
+                                    <ObjectNumber number="{/completedRequests}" unit="Completed" state="Success"/>
+                                </layout:HorizontalLayout>
+                                <Button text="Open Dashboard"
+                                        type="Default"
+                                        press=".onOpenDashboard"
+                                        class="sapUiSmallMarginTop"/>
+                            </VBox>
+                        </f:content>
+                    </f:Card>
 
-                        </layout:HorizontalLayout>
-                    </layout:VerticalLayout>
-                </content>
-            </Page>
-        </pages>
-    </App>
+                </layout:HorizontalLayout>
+            </layout:VerticalLayout>
+        </content>
+    </Page>
 
 </mvc:View>

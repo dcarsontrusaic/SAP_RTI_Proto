@@ -136,8 +136,8 @@ sap.ui.define([
         },
 
         onViewMyRequests: function () {
-            // TODO: Navigate to Screen 3 (My Requests)
-            MessageToast.show("Navigate to My Requests — not yet implemented");
+            var oRouter = sap.ui.core.UIComponent.getRouterFor(this);
+            oRouter.navTo("myRequests");
         },
 
         onOpenApprovals: function () {

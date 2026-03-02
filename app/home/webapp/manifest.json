@@ -33,9 +33,9 @@
   },
   "sap.ui5": {
     "rootView": {
-      "viewName": "com.trusaic.rti.home.view.Home",
+      "viewName": "com.trusaic.rti.home.view.App",
       "type": "XML",
-      "id": "homeView"
+      "id": "appView"
     },
     "models": {
       "": {
@@ -60,6 +60,47 @@
           "synchronizationMode": "None",
           "operationMode": "Server",
           "autoExpandSelect": true
+        }
+      }
+    },
+    "routing": {
+      "config": {
+        "routerClass": "sap.m.routing.Router",
+        "viewType": "XML",
+        "viewPath": "com.trusaic.rti.home.view",
+        "controlId": "appControl",
+        "controlAggregation": "pages",
+        "async": true
+      },
+      "routes": [
+        {
+          "name": "home",
+          "pattern": "",
+          "target": "home"
+        },
+        {
+          "name": "myRequests",
+          "pattern": "my-requests",
+          "target": "myRequests"
+        },
+        {
+          "name": "requestDetail",
+          "pattern": "request/{requestId}",
+          "target": "requestDetail"
+        }
+      ],
+      "targets": {
+        "home": {
+          "viewName": "Home",
+          "viewLevel": 1
+        },
+        "myRequests": {
+          "viewName": "MyRequests",
+          "viewLevel": 2
+        },
+        "requestDetail": {
+          "viewName": "RequestDetail",
+          "viewLevel": 3
         }
       }
     },
