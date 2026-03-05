@@ -21,14 +21,13 @@ sap.ui.define([
                 requests: [],
                 requestCount: 0
             });
-            this.getView().setModel(oViewModel);
+            this.getView().setModel(oViewModel, "view");
             this._allRequests = [];
             this._loadRequests();
         },
 
         _loadRequests: function () {
-            var oViewModel = this.getView().getModel();
-
+            var oViewModel = this.getView().getModel("view");
             fetch("/api/employee/MyRequests?$orderby=submittedAt desc")
                 .then(function (response) { return response.json(); })
                 .then(function (data) {
@@ -54,9 +53,7 @@ sap.ui.define([
         },
 
         _applyFilters: function (sSearchQuery, sStatusKey) {
-            var oViewModel = this.getView().getModel();
-
-            // Get current filter values if not provided
+            var oViewModel = this.getView().getModel("view");
             if (sSearchQuery === null) {
                 var oSearchField = this.getView().byId("requestsTable")
                     .getHeaderToolbar().getContent()[2];
@@ -65,41 +62,33 @@ sap.ui.define([
             if (sStatusKey === null) {
                 sStatusKey = this.byId("statusFilter").getSelectedKey();
             }
-
             var aFiltered = this._allRequests.filter(function (req) {
                 var bMatchSearch = !sSearchQuery ||
                     (req.requestType || "").toLowerCase().indexOf(sSearchQuery) > -1 ||
                     (req.comparisonGroup || "").toLowerCase().indexOf(sSearchQuery) > -1 ||
                     (req.ID || "").toLowerCase().indexOf(sSearchQuery) > -1;
-
                 var bMatchStatus = sStatusKey === "All" || req.status === sStatusKey;
-
                 return bMatchSearch && bMatchStatus;
             });
-
             oViewModel.setProperty("/requests", aFiltered);
             oViewModel.setProperty("/requestCount", aFiltered.length);
         },
 
         onRequestPress: function (oEvent) {
             var oItem = oEvent.getSource();
-            var oBindingContext = oItem.getBindingContext();
+            var oBindingContext = oItem.getBindingContext("view");
             var sRequestId;
-
             if (oBindingContext) {
                 sRequestId = oBindingContext.getProperty("ID");
             } else {
                 sRequestId = oItem.getCells()[0].getText();
             }
-
             if (!sRequestId) { return; }
-
             var oRouter = sap.ui.core.UIComponent.getRouterFor(this);
             oRouter.navTo("requestDetail", { requestId: sRequestId });
         },
 
         onNewRequest: function () {
-            // TODO: Navigate to Screen 2
             MessageToast.show("Navigate to Request Form — not yet implemented");
         },
 

@@ -9,19 +9,23 @@
     displayBlock="true">
 
     <Page title="Request Detail"
-          showNavButton="true"
-          navButtonPress=".onNavBack">
+          showNavButton="false">
+        <headerContent>
+            <Button icon="sap-icon://decline"
+                    type="Transparent"
+                    press=".onCloseDetail"
+                    tooltip="Close detail"/>
+        </headerContent>
         <content>
-            <layout:VerticalLayout class="sapUiMediumMargin" width="auto">
+            <layout:VerticalLayout class="sapUiSmallMargin" width="auto">
 
-                <!-- Request Info Section -->
                 <form:SimpleForm
                     editable="false"
                     layout="ResponsiveGridLayout"
-                    labelSpanL="3" labelSpanM="3"
-                    emptySpanL="4" emptySpanM="4"
+                    labelSpanL="4" labelSpanM="4"
+                    emptySpanL="1" emptySpanM="1"
                     columnsL="1" columnsM="1"
-                    class="sapUiMediumMarginBottom">
+                    class="sapUiSmallMarginBottom">
 
                     <form:toolbar>
                         <Toolbar>
@@ -30,130 +34,110 @@
                     </form:toolbar>
 
                     <Label text="Request ID"/>
-                    <Text text="{/request/ID}"/>
-
+                    <Text text="{detail>/request/ID}"/>
                     <Label text="Request Type"/>
-                    <Text text="{/request/requestType}"/>
-
+                    <Text text="{detail>/request/requestType}"/>
                     <Label text="Comparison Group"/>
-                    <Text text="{/request/comparisonGroup}"/>
-
+                    <Text text="{detail>/request/comparisonGroup}"/>
                     <Label text="Justification"/>
-                    <Text text="{= ${/request/justification} || '—'}"/>
-
+                    <Text text="{= ${detail>/request/justification} || '—'}"/>
                     <Label text="Date Submitted"/>
-                    <Text text="{parts: ['/request/submittedAt'], formatter: '.formatDate'}"/>
-
+                    <Text text="{parts: ['detail>/request/submittedAt'], formatter: '.formatDate'}"/>
                     <Label text="Status"/>
                     <ObjectStatus
-                        text="{= ${/request/status} === 'UnderReview' ? 'Under Review' : ${/request/status}}"
-                        state="{= ${/request/status} === 'Submitted' ? 'Information' :
-                                 ${/request/status} === 'UnderReview' ? 'Warning' :
-                                 ${/request/status} === 'Approved' ? 'Success' :
-                                 ${/request/status} === 'Completed' ? 'Success' :
-                                 ${/request/status} === 'Denied' ? 'Error' : 'None'}"/>
-
+                        text="{= ${detail>/request/status} === 'UnderReview' ? 'Under Review' : ${detail>/request/status}}"
+                        state="{= ${detail>/request/status} === 'Submitted' ? 'Information' :
+                                 ${detail>/request/status} === 'UnderReview' ? 'Warning' :
+                                 ${detail>/request/status} === 'Approved' ? 'Success' :
+                                 ${detail>/request/status} === 'Completed' ? 'Success' :
+                                 ${detail>/request/status} === 'Denied' ? 'Error' : 'None'}"/>
                 </form:SimpleForm>
 
-                <!-- Status Timeline -->
-                <Panel headerText="Status Timeline" class="sapUiMediumMarginBottom">
+                <Panel headerText="Status Timeline" class="sapUiSmallMarginBottom">
                     <content>
-                        <List items="{/statusHistory}">
+                        <List items="{detail>/statusHistory}">
                             <FeedListItem
-                                sender="{changedBy}"
-                                timestamp="{parts: ['changedAt'], formatter: '.formatDate'}"
-                                text="{= ${status} === 'UnderReview' ? 'Under Review' : ${status}}{= ${note} ? ' — ' + ${note} : ''}"
-                                icon="{= ${status} === 'Submitted' ? 'sap-icon://paper-plane' :
-                                        ${status} === 'UnderReview' ? 'sap-icon://pending' :
-                                        ${status} === 'Approved' ? 'sap-icon://accept' :
-                                        ${status} === 'Completed' ? 'sap-icon://complete' :
-                                        ${status} === 'Denied' ? 'sap-icon://decline' : ''}"/>
+                                sender="{detail>changedBy}"
+                                timestamp="{parts: ['detail>changedAt'], formatter: '.formatDate'}"
+                                text="{= ${detail>status} === 'UnderReview' ? 'Under Review' : ${detail>status}}{= ${detail>note} ? ' — ' + ${detail>note} : ''}"
+                                icon="{= ${detail>status} === 'Submitted' ? 'sap-icon://paper-plane' :
+                                        ${detail>status} === 'UnderReview' ? 'sap-icon://pending' :
+                                        ${detail>status} === 'Approved' ? 'sap-icon://accept' :
+                                        ${detail>status} === 'Completed' ? 'sap-icon://complete' :
+                                        ${detail>status} === 'Denied' ? 'sap-icon://decline' : ''}"/>
                         </List>
                     </content>
                 </Panel>
 
-                <!-- Denial Reason (shown only when denied) -->
                 <Panel headerText="Denial Reason"
-                       class="sapUiMediumMarginBottom"
-                       visible="{= ${/request/status} === 'Denied'}">
+                       class="sapUiSmallMarginBottom"
+                       visible="{= ${detail>/request/status} === 'Denied'}">
                     <content>
                         <MessageStrip
-                            text="{/request/denialReason}"
+                            text="{detail>/request/denialReason}"
                             type="Error"
                             showIcon="true"
                             class="sapUiSmallMargin"/>
                     </content>
                 </Panel>
 
-                <!-- Processing Message (shown for Submitted / UnderReview) -->
                 <MessageStrip
                     text="Your request is being processed."
                     type="Information"
                     showIcon="true"
-                    visible="{= ${/request/status} === 'Submitted' || ${/request/status} === 'UnderReview'}"
-                    class="sapUiMediumMarginBottom"/>
+                    visible="{= ${detail>/request/status} === 'Submitted' || ${detail>/request/status} === 'UnderReview'}"
+                    class="sapUiSmallMarginBottom"/>
 
-                <!-- Approved Awaiting Report (shown for Approved without report) -->
                 <MessageStrip
                     text="Approved — response being generated by PayParity."
                     type="Success"
                     showIcon="true"
-                    visible="{= ${/request/status} === 'Approved' &amp;&amp; !${/report}}"
-                    class="sapUiMediumMarginBottom"/>
+                    visible="{= ${detail>/request/status} === 'Approved' &amp;&amp; !${detail>/report}}"
+                    class="sapUiSmallMarginBottom"/>
 
-                <!-- RTI Report (shown when Completed) -->
                 <Panel headerText="RTI Report"
-                       class="sapUiMediumMarginBottom"
-                       visible="{= ${/request/status} === 'Completed' &amp;&amp; !!${/report}}">
+                       class="sapUiSmallMarginBottom"
+                       visible="{= ${detail>/request/status} === 'Completed' &amp;&amp; !!${detail>/report}}">
                     <content>
                         <layout:VerticalLayout class="sapUiSmallMargin" width="100%">
-
-                            <!-- Employee Details -->
                             <Panel headerText="Employee Details"
-                                   visible="{= !!${/reportParsed/data/employee}}"
+                                   visible="{= !!${detail>/reportParsed/data/employee}}"
                                    class="sapUiSmallMarginBottom">
                                 <content>
-                                    <HBox id="employeeDetailsBox" class="sapUiSmallMargin"/>
+                                    <HBox id="employeeDetailsBox" class="sapUiSmallMargin"
+                                          renderType="Bare" wrap="Wrap"/>
                                 </content>
                             </Panel>
-
-                            <!-- Employee Pay -->
                             <Panel headerText="Employee Pay"
                                    class="sapUiSmallMarginBottom">
                                 <content>
-                                    <HBox id="employeePayBox" class="sapUiSmallMargin"/>
+                                    <HBox id="employeePayBox" class="sapUiSmallMargin"
+                                          renderType="Bare" wrap="Wrap"/>
                                 </content>
                             </Panel>
-
-                            <!-- Comparison Group Pay -->
                             <Panel headerText="Comparison Group"
                                    class="sapUiSmallMarginBottom">
                                 <content>
-                                    <HBox id="compGroupPayBox" class="sapUiSmallMargin"/>
+                                    <HBox id="compGroupPayBox" class="sapUiSmallMargin"
+                                          renderType="Bare" wrap="Wrap"/>
                                 </content>
                             </Panel>
-
-                            <!-- Comparison Group Size -->
-                            <Text text="Comparison Group Size: {/reportParsed/data/comparisonGroupSize} employees"
-                                  visible="{= !!${/reportParsed/data/comparisonGroupSize}}"
+                            <Text text="Comparison Group Size: {detail>/reportParsed/data/comparisonGroupSize} employees"
+                                  visible="{= !!${detail>/reportParsed/data/comparisonGroupSize}}"
                                   class="sapUiSmallMarginBottom"/>
-
-                            <!-- Narrative -->
                             <Panel headerText="Narrative"
-                                   visible="{= !!${/report/narrative}}"
+                                   visible="{= !!${detail>/report/narrative}}"
                                    class="sapUiSmallMarginBottom">
                                 <content>
-                                    <Text text="{/report/narrative}" class="sapUiSmallMargin"/>
+                                    <Text text="{detail>/report/narrative}" class="sapUiSmallMargin"
+                                          wrapping="true"/>
                                 </content>
                             </Panel>
-
-                            <!-- Download Link -->
                             <Link text="Download PDF Report"
-                                  href="{/report/reportFileUrl}"
+                                  href="{detail>/report/reportFileUrl}"
                                   target="_blank"
-                                  visible="{= !!${/report/reportFileUrl}}"
+                                  visible="{= !!${detail>/report/reportFileUrl}}"
                                   class="sapUiSmallMarginTop"/>
-
                         </layout:VerticalLayout>
                     </content>
                 </Panel>

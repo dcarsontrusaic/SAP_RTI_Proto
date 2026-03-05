@@ -31,7 +31,19 @@
       }
     }
   },
+  "sap.ui": {
+    "technology": "UI5",
+    "deviceTypes": {
+      "desktop": true,
+      "tablet": true,
+      "phone": true
+    }
+  },
   "sap.ui5": {
+    "contentDensities": {
+      "compact": true,
+      "cozy": true
+    },
     "rootView": {
       "viewName": "com.trusaic.rti.home.view.App",
       "type": "XML",
@@ -81,12 +93,12 @@
         {
           "name": "myRequests",
           "pattern": "my-requests",
-          "target": "myRequests"
+          "target": "myRequestsFCL"
         },
         {
           "name": "requestDetail",
-          "pattern": "request/{requestId}",
-          "target": "requestDetail"
+          "pattern": "my-requests/{requestId}",
+          "target": "myRequestsFCL"
         }
       ],
       "targets": {
@@ -94,13 +106,9 @@
           "viewName": "Home",
           "viewLevel": 1
         },
-        "myRequests": {
-          "viewName": "MyRequests",
+        "myRequestsFCL": {
+          "viewName": "MyRequestsFCL",
           "viewLevel": 2
-        },
-        "requestDetail": {
-          "viewName": "RequestDetail",
-          "viewLevel": 3
         }
       }
     },

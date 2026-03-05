@@ -1,6 +1,7 @@
 <mvc:View
     xmlns:mvc="sap.ui.core.mvc"
     xmlns="sap.m"
+    xmlns:core="sap.ui.core"
     controllerName="com.trusaic.rti.home.controller.MyRequests"
     displayBlock="true">
 
@@ -16,7 +17,7 @@
         <content>
             <Table id="requestsTable"
                    items="{
-                       path: '/requests',
+                       path: 'view>/requests',
                        sorter: { path: 'submittedAt', descending: true }
                    }"
                    growing="true"
@@ -25,19 +26,19 @@
 
                 <headerToolbar>
                     <OverflowToolbar>
-                        <Title text="RTI Requests ({/requestCount})"/>
+                        <Title text="RTI Requests ({view>/requestCount})"/>
                         <ToolbarSpacer/>
                         <SearchField placeholder="Search by type..." liveChange=".onSearch" width="250px"/>
                         <Select id="statusFilter"
                                 change=".onStatusFilterChange"
                                 selectedKey="All">
                             <items>
-                                <core:Item xmlns:core="sap.ui.core" key="All" text="All Statuses"/>
-                                <core:Item xmlns:core="sap.ui.core" key="Submitted" text="Submitted"/>
-                                <core:Item xmlns:core="sap.ui.core" key="UnderReview" text="Under Review"/>
-                                <core:Item xmlns:core="sap.ui.core" key="Approved" text="Approved"/>
-                                <core:Item xmlns:core="sap.ui.core" key="Denied" text="Denied"/>
-                                <core:Item xmlns:core="sap.ui.core" key="Completed" text="Completed"/>
+                                <core:Item key="All" text="All Statuses"/>
+                                <core:Item key="Submitted" text="Submitted"/>
+                                <core:Item key="UnderReview" text="Under Review"/>
+                                <core:Item key="Approved" text="Approved"/>
+                                <core:Item key="Denied" text="Denied"/>
+                                <core:Item key="Completed" text="Completed"/>
                             </items>
                         </Select>
                     </OverflowToolbar>
@@ -67,23 +68,23 @@
                 <items>
                     <ColumnListItem type="Navigation" press="onRequestPress">
                         <cells>
-                            <Text text="{ID}"/>
-                            <Text text="{requestType}"/>
-                            <Text text="{comparisonGroup}"/>
-                            <Text text="{parts: ['submittedAt'], formatter: '.formatDate'}"/>
+                            <Text text="{view>ID}"/>
+                            <Text text="{view>requestType}"/>
+                            <Text text="{view>comparisonGroup}"/>
+                            <Text text="{parts: ['view>submittedAt'], formatter: '.formatDate'}"/>
                             <ObjectStatus
-                                text="{= ${status} === 'UnderReview' ? 'Under Review' : ${status}}"
-                                state="{= ${status} === 'Submitted' ? 'Information' :
-                                         ${status} === 'UnderReview' ? 'Warning' :
-                                         ${status} === 'Approved' ? 'Success' :
-                                         ${status} === 'Completed' ? 'Success' :
-                                         ${status} === 'Denied' ? 'Error' : 'None'}"
-                                icon="{= ${status} === 'Submitted' ? 'sap-icon://paper-plane' :
-                                        ${status} === 'UnderReview' ? 'sap-icon://pending' :
-                                        ${status} === 'Approved' ? 'sap-icon://accept' :
-                                        ${status} === 'Completed' ? 'sap-icon://complete' :
-                                        ${status} === 'Denied' ? 'sap-icon://decline' : ''}"/>
-                            <Text text="{parts: ['lastUpdatedAt'], formatter: '.formatDate'}"/>
+                                text="{= ${view>status} === 'UnderReview' ? 'Under Review' : ${view>status}}"
+                                state="{= ${view>status} === 'Submitted' ? 'Information' :
+                                         ${view>status} === 'UnderReview' ? 'Warning' :
+                                         ${view>status} === 'Approved' ? 'Success' :
+                                         ${view>status} === 'Completed' ? 'Success' :
+                                         ${view>status} === 'Denied' ? 'Error' : 'None'}"
+                                icon="{= ${view>status} === 'Submitted' ? 'sap-icon://paper-plane' :
+                                        ${view>status} === 'UnderReview' ? 'sap-icon://pending' :
+                                        ${view>status} === 'Approved' ? 'sap-icon://accept' :
+                                        ${view>status} === 'Completed' ? 'sap-icon://complete' :
+                                        ${view>status} === 'Denied' ? 'sap-icon://decline' : ''}"/>
+                            <Text text="{parts: ['view>lastUpdatedAt'], formatter: '.formatDate'}"/>
                         </cells>
                     </ColumnListItem>
                 </items>
