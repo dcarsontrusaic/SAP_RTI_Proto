@@ -1,0 +1,149 @@
+<mvc:View
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:layout="sap.ui.layout"
+    xmlns:form="sap.ui.layout.form"
+    controllerName="com.trusaic.rti.home.controller.ApprovalDetail"
+    displayBlock="true">
+
+    <Page title="Review Request"
+          showNavButton="false">
+        <headerContent>
+            <Button icon="sap-icon://decline"
+                    type="Transparent"
+                    press=".onCloseDetail"
+                    tooltip="Close detail"/>
+        </headerContent>
+        <content>
+            <layout:VerticalLayout class="sapUiSmallMargin" width="auto">
+
+                <!-- Request Information -->
+                <form:SimpleForm
+                    editable="false"
+                    layout="ResponsiveGridLayout"
+                    labelSpanL="4" labelSpanM="4"
+                    emptySpanL="1" emptySpanM="1"
+                    columnsL="1" columnsM="1"
+                    class="sapUiSmallMarginBottom">
+
+                    <form:toolbar>
+                        <Toolbar>
+                            <Title text="Request Information"/>
+                        </Toolbar>
+                    </form:toolbar>
+
+                    <Label text="Request ID"/>
+                    <Text text="{ad>/request/ID}"/>
+                    <Label text="Employee"/>
+                    <Text text="{ad>/request/employeeName}"/>
+                    <Label text="Department"/>
+                    <Text text="{= ${ad>/request/employee/department} || '—'}"/>
+                    <Label text="Location"/>
+                    <Text text="{= ${ad>/request/employee/location} || '—'}"/>
+                    <Label text="Request Type"/>
+                    <Text text="{ad>/request/requestType}"/>
+                    <Label text="Language"/>
+                    <Text text="{ad>/request/comparisonGroup}"/>
+                    <Label text="Justification"/>
+                    <Text text="{= ${ad>/request/justification} || '—'}"/>
+                    <Label text="Date Submitted"/>
+                    <Text text="{parts: ['ad>/request/submittedAt'], formatter: '.formatDate'}"/>
+                    <Label text="Status"/>
+                    <ObjectStatus
+                        text="{= ${ad>/request/status} === 'UnderReview' ? 'Under Review' : ${ad>/request/status}}"
+                        state="{= ${ad>/request/status} === 'Submitted' ? 'Information' :
+                                 ${ad>/request/status} === 'UnderReview' ? 'Warning' :
+                                 ${ad>/request/status} === 'Approved' ? 'Success' :
+                                 ${ad>/request/status} === 'Completed' ? 'Success' :
+                                 ${ad>/request/status} === 'Denied' ? 'Error' : 'None'}"/>
+                </form:SimpleForm>
+
+                <!-- PayParity Validation -->
+                <Panel headerText="PayParity Validation Summary"
+                       visible="{= !!${ad>/request/payparityValidationSummary}}"
+                       class="sapUiSmallMarginBottom">
+                    <content>
+                        <MessageStrip
+                            text="{ad>/request/payparityValidationSummary}"
+                            type="{= ${ad>/request/payparityValidationSummary} &amp;&amp; ${ad>/request/payparityValidationSummary}.indexOf('flag') > -1 ? 'Warning' : 'Information'}"
+                            showIcon="true"
+                            class="sapUiSmallMargin"/>
+                    </content>
+                </Panel>
+
+                <!-- Status Timeline -->
+                <Panel headerText="Status Timeline" class="sapUiSmallMarginBottom">
+                    <content>
+                        <List items="{ad>/statusHistory}">
+                            <FeedListItem
+                                sender="{ad>changedBy}"
+                                timestamp="{parts: ['ad>changedAt'], formatter: '.formatDate'}"
+                                text="{= ${ad>status} === 'UnderReview' ? 'Under Review' : ${ad>status}}{= ${ad>note} ? ' — ' + ${ad>note} : ''}"
+                                icon="{= ${ad>status} === 'Submitted' ? 'sap-icon://paper-plane' :
+                                        ${ad>status} === 'UnderReview' ? 'sap-icon://pending' :
+                                        ${ad>status} === 'Approved' ? 'sap-icon://accept' :
+                                        ${ad>status} === 'Completed' ? 'sap-icon://complete' :
+                                        ${ad>status} === 'Denied' ? 'sap-icon://decline' : ''}"/>
+                        </List>
+                    </content>
+                </Panel>
+
+                <!-- Action Buttons (only for actionable statuses) -->
+                <Panel headerText="Take Action"
+                       visible="{= ${ad>/request/status} === 'Submitted' || ${ad>/request/status} === 'UnderReview'}"
+                       class="sapUiSmallMarginBottom">
+                    <content>
+                        <layout:VerticalLayout class="sapUiSmallMargin" width="100%">
+                            <HBox class="sapUiSmallMarginBottom">
+                                <Button text="Approve"
+                                        type="Accept"
+                                        icon="sap-icon://accept"
+                                        press=".onApprove"
+                                        class="sapUiSmallMarginEnd"/>
+                                <Button text="Deny"
+                                        type="Reject"
+                                        icon="sap-icon://decline"
+                                        press=".onDenyToggle"/>
+                            </HBox>
+                            <VBox visible="{ad>/showDenialReason}">
+                                <Label text="Denial Reason (required)" required="true"/>
+                                <TextArea id="denialReasonInput"
+                                          value="{ad>/denialReason}"
+                                          rows="3"
+                                          width="100%"
+                                          placeholder="Provide a reason for denial..."
+                                          class="sapUiSmallMarginBottom"/>
+                                <Button text="Confirm Denial"
+                                        type="Reject"
+                                        icon="sap-icon://decline"
+                                        press=".onDenyConfirm"/>
+                            </VBox>
+                        </layout:VerticalLayout>
+                    </content>
+                </Panel>
+
+                <!-- Already actioned -->
+                <MessageStrip
+                    text="This request was approved."
+                    type="Success"
+                    showIcon="true"
+                    visible="{= ${ad>/request/status} === 'Approved' || ${ad>/request/status} === 'Completed'}"
+                    class="sapUiSmallMarginBottom"/>
+
+                <Panel headerText="Denial Reason"
+                       visible="{= ${ad>/request/status} === 'Denied'}"
+                       class="sapUiSmallMarginBottom">
+                    <content>
+                        <MessageStrip
+                            text="{ad>/request/denialReason}"
+                            type="Error"
+                            showIcon="true"
+                            class="sapUiSmallMargin"/>
+                    </content>
+                </Panel>
+
+            </layout:VerticalLayout>
+        </content>
+    </Page>
+
+</mvc:View>

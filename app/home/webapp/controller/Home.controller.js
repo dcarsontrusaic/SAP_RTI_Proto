@@ -108,7 +108,8 @@ sap.ui.define([
         },
 
         onOpenApprovals: function () {
-            MessageToast.show("Navigate to Approval Queue — not yet implemented");
+            var oRouter = sap.ui.core.UIComponent.getRouterFor(this);
+            oRouter.navTo("approvals");
         },
 
         onOpenDashboard: function () {

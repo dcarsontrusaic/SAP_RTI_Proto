@@ -1,0 +1,27 @@
+<mvc:View
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    controllerName="com.trusaic.rti.home.controller.ApprovalsFCL"
+    displayBlock="true">
+
+    <Page showHeader="false">
+        <content>
+            <f:FlexibleColumnLayout
+                id="approvalsFcl"
+                layout="{/fclLayout}"
+                backgroundDesign="Translucent">
+
+                <f:beginColumnPages>
+                    <mvc:XMLView viewName="com.trusaic.rti.home.view.ApprovalQueue" id="approvalQueueView"/>
+                </f:beginColumnPages>
+
+                <f:midColumnPages>
+                    <mvc:XMLView viewName="com.trusaic.rti.home.view.ApprovalDetail" id="approvalDetailView"/>
+                </f:midColumnPages>
+
+            </f:FlexibleColumnLayout>
+        </content>
+    </Page>
+
+</mvc:View>

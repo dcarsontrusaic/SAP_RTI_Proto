@@ -1,0 +1,95 @@
+<mvc:View
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    controllerName="com.trusaic.rti.home.controller.ApprovalQueue"
+    displayBlock="true">
+
+    <Page title="Approval Queue"
+          showNavButton="true"
+          navButtonPress=".onNavBack">
+        <content>
+            <Table id="approvalsTable"
+                   items="{
+                       path: 'aq>/requests',
+                       sorter: { path: 'submittedAt', descending: false }
+                   }"
+                   growing="true"
+                   growingThreshold="20"
+                   mode="None">
+
+                <headerToolbar>
+                    <OverflowToolbar>
+                        <Title text="Pending Approvals ({aq>/requestCount})"/>
+                        <ToolbarSpacer/>
+                        <SearchField placeholder="Search..." liveChange=".onSearch" width="250px"/>
+                        <Select id="statusFilter"
+                                change=".onStatusFilterChange"
+                                selectedKey="UnderReview">
+                            <items>
+                                <core:Item key="All" text="All Statuses"/>
+                                <core:Item key="Submitted" text="Submitted"/>
+                                <core:Item key="UnderReview" text="Under Review"/>
+                                <core:Item key="Approved" text="Approved"/>
+                                <core:Item key="Denied" text="Denied"/>
+                                <core:Item key="Completed" text="Completed"/>
+                            </items>
+                        </Select>
+                    </OverflowToolbar>
+                </headerToolbar>
+
+                <columns>
+                    <Column width="10em">
+                        <Text text="Request ID"/>
+                    </Column>
+                    <Column>
+                        <Text text="Employee"/>
+                    </Column>
+                    <Column>
+                        <Text text="Request Type"/>
+                    </Column>
+                    <Column>
+                        <Text text="Language"/>
+                    </Column>
+                    <Column width="10em">
+                        <Text text="Date Submitted"/>
+                    </Column>
+                    <Column width="8em">
+                        <Text text="Days Pending"/>
+                    </Column>
+                    <Column width="9em">
+                        <Text text="Status"/>
+                    </Column>
+                </columns>
+
+                <items>
+                    <ColumnListItem type="Navigation" press=".onRequestPress">
+                        <cells>
+                            <Text text="{aq>ID}"/>
+                            <Text text="{aq>employeeName}"/>
+                            <Text text="{aq>requestType}"/>
+                            <Text text="{aq>comparisonGroup}"/>
+                            <Text text="{parts: ['aq>submittedAt'], formatter: '.formatDate'}"/>
+                            <ObjectNumber
+                                number="{aq>daysPending}"
+                                state="{= ${aq>daysPending} > 7 ? 'Error' : ${aq>daysPending} > 3 ? 'Warning' : 'Success'}"/>
+                            <ObjectStatus
+                                text="{= ${aq>status} === 'UnderReview' ? 'Under Review' : ${aq>status}}"
+                                state="{= ${aq>status} === 'Submitted' ? 'Information' :
+                                         ${aq>status} === 'UnderReview' ? 'Warning' :
+                                         ${aq>status} === 'Approved' ? 'Success' :
+                                         ${aq>status} === 'Completed' ? 'Success' :
+                                         ${aq>status} === 'Denied' ? 'Error' : 'None'}"
+                                icon="{= ${aq>status} === 'Submitted' ? 'sap-icon://paper-plane' :
+                                        ${aq>status} === 'UnderReview' ? 'sap-icon://pending' :
+                                        ${aq>status} === 'Approved' ? 'sap-icon://accept' :
+                                        ${aq>status} === 'Completed' ? 'sap-icon://complete' :
+                                        ${aq>status} === 'Denied' ? 'sap-icon://decline' : ''}"/>
+                        </cells>
+                    </ColumnListItem>
+                </items>
+            </Table>
+        </content>
+    </Page>
+
+</mvc:View>

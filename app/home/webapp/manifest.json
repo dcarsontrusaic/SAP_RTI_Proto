@@ -104,6 +104,16 @@
           "name": "requestForm",
           "pattern": "new-request",
           "target": "requestForm"
+        },
+        {
+          "name": "approvals",
+          "pattern": "approvals",
+          "target": "approvalsFCL"
+        },
+        {
+          "name": "approvalDetail",
+          "pattern": "approvals/{requestId}",
+          "target": "approvalsFCL"
         }
       ],
       "targets": {
@@ -117,6 +127,10 @@
         },
         "requestForm": {
           "viewName": "RequestForm",
+          "viewLevel": 2
+        },
+        "approvalsFCL": {
+          "viewName": "ApprovalsFCL",
           "viewLevel": 2
         }
       }
