@@ -52,7 +52,7 @@
                         <Text text="Request Type"/>
                     </Column>
                     <Column>
-                        <Text text="Comparison Group"/>
+                        <Text text="Language"/>
                     </Column>
                     <Column width="10em">
                         <Text text="Date Submitted"/>

@@ -99,6 +99,11 @@
           "name": "requestDetail",
           "pattern": "my-requests/{requestId}",
           "target": "myRequestsFCL"
+        },
+        {
+          "name": "requestForm",
+          "pattern": "new-request",
+          "target": "requestForm"
         }
       ],
       "targets": {
@@ -108,6 +113,10 @@
         },
         "myRequestsFCL": {
           "viewName": "MyRequestsFCL",
+          "viewLevel": 2
+        },
+        "requestForm": {
+          "viewName": "RequestForm",
           "viewLevel": 2
         }
       }
