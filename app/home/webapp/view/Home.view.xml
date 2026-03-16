@@ -87,9 +87,9 @@
                             visible="{/isAdmin}">
                         <f:header>
                             <card:Header
-                                title="Admin Dashboard"
-                                subtitle="Organization-wide overview"
-                                iconSrc="sap-icon://dashboard"/>
+                                title="Admin Settings"
+                                subtitle="Project &amp; scope configuration"
+                                iconSrc="sap-icon://settings"/>
                         </f:header>
                         <f:content>
                             <VBox class="sapUiSmallMargin">
@@ -98,7 +98,7 @@
                                     <ObjectNumber number="{/pendingRequests}" unit="Pending" state="Warning" class="sapUiSmallMarginEnd"/>
                                     <ObjectNumber number="{/completedRequests}" unit="Completed" state="Success"/>
                                 </layout:HorizontalLayout>
-                                <Button text="Open Dashboard"
+                                <Button text="Open Settings"
                                         type="Default"
                                         press=".onOpenDashboard"
                                         class="sapUiSmallMarginTop"/>

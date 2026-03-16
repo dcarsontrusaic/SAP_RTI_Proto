@@ -1,0 +1,180 @@
+<mvc:View
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:layout="sap.ui.layout"
+    controllerName="com.trusaic.rti.home.controller.AdminSettings"
+    displayBlock="true">
+
+    <Page title="Admin Settings"
+          showNavButton="true"
+          navButtonPress=".onNavBack">
+        <content>
+            <IconTabBar id="adminTabs" selectedKey="projectMapping" class="sapUiNoContentPadding">
+
+                <!-- Tab 1: Project Mapping -->
+                <items>
+                    <IconTabFilter key="projectMapping" text="Project Mapping" icon="sap-icon://group">
+                        <layout:VerticalLayout class="sapUiMediumMargin" width="auto">
+                            <Title text="Map Employees to Trusaic Projects" level="H3" class="sapUiSmallMarginBottom"/>
+                            <Text text="Assign individual employees or groups to a PayParity project. Each mapping determines which project context is used when generating RTI reports."
+                                  class="sapUiSmallMarginBottom" wrapping="true"/>
+
+                            <!-- Add new mapping -->
+                            <Panel headerText="Add Mapping" class="sapUiSmallMarginBottom">
+                                <content>
+                                    <HBox class="sapUiSmallMargin" alignItems="End" wrap="Wrap">
+                                        <VBox class="sapUiSmallMarginEnd">
+                                            <Label text="Assignment Type" required="true"/>
+                                            <Select id="pmAssignmentType"
+                                                    selectedKey="{admin>/pm/newAssignmentType}"
+                                                    change=".onPmTypeChange">
+                                                <items>
+                                                    <core:Item key="Employee" text="Individual Employee"/>
+                                                    <core:Item key="Department" text="Department"/>
+                                                    <core:Item key="Location" text="Location"/>
+                                                    <core:Item key="Custom" text="Custom Group"/>
+                                                </items>
+                                            </Select>
+                                        </VBox>
+                                        <VBox class="sapUiSmallMarginEnd">
+                                            <Label text="Employee / Group" required="true"/>
+                                            <Input id="pmTarget"
+                                                   value="{admin>/pm/newTarget}"
+                                                   placeholder="e.g. EMP001 or Engineering"
+                                                   width="220px"/>
+                                        </VBox>
+                                        <VBox class="sapUiSmallMarginEnd">
+                                            <Label text="Trusaic Project" required="true"/>
+                                            <Input id="pmProject"
+                                                   value="{admin>/pm/newProject}"
+                                                   placeholder="e.g. PP-PROJ-2025-001"
+                                                   width="220px"/>
+                                        </VBox>
+                                        <Button text="Add"
+                                                type="Emphasized"
+                                                icon="sap-icon://add"
+                                                press=".onPmAdd"
+                                                class="sapUiSmallMarginBottom"/>
+                                    </HBox>
+                                </content>
+                            </Panel>
+
+                            <!-- Current mappings table -->
+                            <Table items="{admin>/pm/mappings}" mode="None">
+                                <headerToolbar>
+                                    <Toolbar>
+                                        <Title text="Current Mappings ({admin>/pm/count})"/>
+                                    </Toolbar>
+                                </headerToolbar>
+                                <columns>
+                                    <Column><Text text="Type"/></Column>
+                                    <Column><Text text="Employee / Group"/></Column>
+                                    <Column><Text text="Trusaic Project"/></Column>
+                                    <Column width="5em"><Text text="Actions"/></Column>
+                                </columns>
+                                <items>
+                                    <ColumnListItem>
+                                        <cells>
+                                            <Text text="{admin>type}"/>
+                                            <Text text="{admin>target}"/>
+                                            <Text text="{admin>project}"/>
+                                            <Button icon="sap-icon://delete"
+                                                    type="Transparent"
+                                                    press=".onPmDelete"/>
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                            </Table>
+                        </layout:VerticalLayout>
+                    </IconTabFilter>
+
+                    <!-- Tab 2: Scope Mapping -->
+                    <IconTabFilter key="scopeMapping" text="Scope Mapping" icon="sap-icon://locked">
+                        <layout:VerticalLayout class="sapUiMediumMargin" width="auto">
+                            <Title text="Map Users &amp; Roles to App Scopes" level="H3" class="sapUiSmallMarginBottom"/>
+                            <Text text="Assign SuccessFactors users, roles, role collections, or groups to an RTI app scope. This controls which screens and actions each user can access."
+                                  class="sapUiSmallMarginBottom" wrapping="true"/>
+
+                            <!-- Add new scope mapping -->
+                            <Panel headerText="Add Scope Mapping" class="sapUiSmallMarginBottom">
+                                <content>
+                                    <HBox class="sapUiSmallMargin" alignItems="End" wrap="Wrap">
+                                        <VBox class="sapUiSmallMarginEnd">
+                                            <Label text="Source Type" required="true"/>
+                                            <Select id="smSourceType"
+                                                    selectedKey="{admin>/sm/newSourceType}">
+                                                <items>
+                                                    <core:Item key="User" text="SF User"/>
+                                                    <core:Item key="Role" text="SF Role"/>
+                                                    <core:Item key="RoleCollection" text="Role Collection"/>
+                                                    <core:Item key="Group" text="SF Group"/>
+                                                </items>
+                                            </Select>
+                                        </VBox>
+                                        <VBox class="sapUiSmallMarginEnd">
+                                            <Label text="Source Value" required="true"/>
+                                            <Input id="smSourceValue"
+                                                   value="{admin>/sm/newSourceValue}"
+                                                   placeholder="e.g. HR_MANAGERS or john.doe"
+                                                   width="220px"/>
+                                        </VBox>
+                                        <VBox class="sapUiSmallMarginEnd">
+                                            <Label text="App Scope" required="true"/>
+                                            <Select id="smAppScope"
+                                                    selectedKey="{admin>/sm/newAppScope}">
+                                                <items>
+                                                    <core:Item key="Employee" text="Employee"/>
+                                                    <core:Item key="Approver" text="Approver"/>
+                                                    <core:Item key="Admin" text="Admin"/>
+                                                </items>
+                                            </Select>
+                                        </VBox>
+                                        <Button text="Add"
+                                                type="Emphasized"
+                                                icon="sap-icon://add"
+                                                press=".onSmAdd"
+                                                class="sapUiSmallMarginBottom"/>
+                                    </HBox>
+                                </content>
+                            </Panel>
+
+                            <!-- Current scope mappings table -->
+                            <Table items="{admin>/sm/mappings}" mode="None">
+                                <headerToolbar>
+                                    <Toolbar>
+                                        <Title text="Current Scope Mappings ({admin>/sm/count})"/>
+                                    </Toolbar>
+                                </headerToolbar>
+                                <columns>
+                                    <Column><Text text="Source Type"/></Column>
+                                    <Column><Text text="Source Value"/></Column>
+                                    <Column width="9em"><Text text="App Scope"/></Column>
+                                    <Column width="5em"><Text text="Actions"/></Column>
+                                </columns>
+                                <items>
+                                    <ColumnListItem>
+                                        <cells>
+                                            <Text text="{admin>sourceType}"/>
+                                            <Text text="{admin>sourceValue}"/>
+                                            <ObjectStatus
+                                                text="{admin>appScope}"
+                                                state="{= ${admin>appScope} === 'Admin' ? 'Error' :
+                                                         ${admin>appScope} === 'Approver' ? 'Warning' :
+                                                         'Success'}"/>
+                                            <Button icon="sap-icon://delete"
+                                                    type="Transparent"
+                                                    press=".onSmDelete"/>
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                            </Table>
+                        </layout:VerticalLayout>
+                    </IconTabFilter>
+
+                </items>
+            </IconTabBar>
+        </content>
+    </Page>
+
+</mvc:View>

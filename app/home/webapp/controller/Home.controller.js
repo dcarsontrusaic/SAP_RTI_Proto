@@ -113,7 +113,8 @@ sap.ui.define([
         },
 
         onOpenDashboard: function () {
-            MessageToast.show("Navigate to Admin Dashboard — not yet implemented");
+            var oRouter = sap.ui.core.UIComponent.getRouterFor(this);
+            oRouter.navTo("adminSettings");
         }
     });
 });

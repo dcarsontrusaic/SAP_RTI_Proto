@@ -114,6 +114,11 @@
           "name": "approvalDetail",
           "pattern": "approvals/{requestId}",
           "target": "approvalsFCL"
+        },
+        {
+          "name": "adminSettings",
+          "pattern": "admin-settings",
+          "target": "adminSettings"
         }
       ],
       "targets": {
@@ -131,6 +136,10 @@
         },
         "approvalsFCL": {
           "viewName": "ApprovalsFCL",
+          "viewLevel": 2
+        },
+        "adminSettings": {
+          "viewName": "AdminSettings",
           "viewLevel": 2
         }
       }
