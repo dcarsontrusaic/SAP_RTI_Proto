@@ -3,6 +3,7 @@
     xmlns="sap.m"
     xmlns:f="sap.f"
     xmlns:card="sap.f.cards"
+    xmlns:core="sap.ui.core"
     xmlns:layout="sap.ui.layout"
     controllerName="com.trusaic.rti.home.controller.Home"
     displayBlock="true">
@@ -14,35 +15,12 @@
         </headerContent>
         <content>
             <layout:VerticalLayout class="sapUiMediumMargin" width="100%">
-
-                <!-- Welcome Message -->
                 <Title text="Welcome" level="H2" class="sapUiMediumMarginBottom"/>
                 <Text text="Select an action below to get started." class="sapUiMediumMarginBottom"/>
+                <HBox wrap="Wrap" class="sapUiMediumMarginTop" alignItems="Stretch">
 
-                <!-- Cards Container -->
-                <layout:HorizontalLayout allowWrapping="true" class="sapUiMediumMarginTop">
-
-                    <!-- Employee Card: Request a Report -->
-                    <f:Card class="sapUiSmallMarginEnd sapUiSmallMarginBottom" width="320px">
-                        <f:header>
-                            <card:Header
-                                title="Request a Report"
-                                subtitle="Submit a new RTI request"
-                                iconSrc="sap-icon://request"/>
-                        </f:header>
-                        <f:content>
-                            <VBox class="sapUiSmallMargin">
-                                <Text text="Start a new Right to Information request to compare your pay data against your peers."/>
-                                <Button text="New Request"
-                                        type="Emphasized"
-                                        press=".onNewRequest"
-                                        class="sapUiSmallMarginTop"/>
-                            </VBox>
-                        </f:content>
-                    </f:Card>
-
-                    <!-- Employee Card: My Requests -->
-                    <f:Card class="sapUiSmallMarginEnd sapUiSmallMarginBottom" width="320px">
+                    <!-- Combined My Requests card -->
+                    <f:Card class="sapUiSmallMarginEnd sapUiSmallMarginBottom" width="520px">
                         <f:header>
                             <card:Header
                                 title="My Requests"
@@ -50,63 +28,112 @@
                                 iconSrc="sap-icon://list"/>
                         </f:header>
                         <f:content>
-                            <VBox class="sapUiSmallMargin">
-                                <Text text="View the status of all your submitted RTI requests."/>
-                                <Button text="View My Requests"
-                                        type="Default"
-                                        press=".onViewMyRequests"
-                                        class="sapUiSmallMarginTop"/>
+                            <VBox class="sapUiSmallMargin" height="298px">
+                                <HBox class="sapUiSmallMarginBottom">
+                                    <Button text="New Request"
+                                            type="Emphasized"
+                                            icon="sap-icon://add"
+                                            press=".onNewRequest"
+                                            class="sapUiSmallMarginEnd"/>
+                                    <Button text="View All Requests"
+                                            type="Default"
+                                            icon="sap-icon://request"
+                                            press=".onViewMyRequests"/>
+                                </HBox>
+                                <Table items="{/recentRequests}"
+                                       mode="None"
+                                       showSeparators="Inner"
+                                       fixedLayout="true"
+                                       visible="{= ${/myRequestCount} > 0}">
+                                    <headerToolbar>
+                                        <Toolbar>
+                                            <Title text="Recent" level="H5"/>
+                                        </Toolbar>
+                                    </headerToolbar>
+                                    <columns>
+                                        <Column>
+                                            <Text text="Request Type"/>
+                                        </Column>
+                                        <Column width="8em">
+                                            <Text text="Submitted"/>
+                                        </Column>
+                                        <Column width="9em">
+                                            <Text text="Status"/>
+                                        </Column>
+                                    </columns>
+                                    <items>
+                                        <ColumnListItem type="Navigation" press=".onRecentRequestPress">
+                                            <cells>
+                                                <Text text="{requestType}"/>
+                                                <Text text="{parts: ['submittedAt'], formatter: '.formatDate'}"/>
+                                                <ObjectStatus
+                                                    text="{= ${status} === 'UnderReview' ? 'Under Review' : ${status}}"
+                                                    state="{= ${status} === 'Submitted' ? 'Information' :
+                                                             ${status} === 'UnderReview' ? 'Warning' :
+                                                             ${status} === 'Approved' ? 'Success' :
+                                                             ${status} === 'Completed' ? 'Success' :
+                                                             ${status} === 'Denied' ? 'Error' : 'None'}"/>
+                                            </cells>
+                                        </ColumnListItem>
+                                    </items>
+                                </Table>
+                                <VBox visible="{= ${/myRequestCount} === 0}"
+                                      alignItems="Center"
+                                      justifyContent="Center"
+                                      class="sapUiSmallMarginTop"
+                                      height="100%">
+                                    <core:Icon src="sap-icon://document" size="2.5rem" class="sapUiSmallMarginBottom" color="#bbb"/>
+                                    <Text text="No requests yet" class="sapUiTinyMarginBottom"/>
+                                    <Text text="Submit your first request using the button above."/>
+                                </VBox>
                             </VBox>
                         </f:content>
                     </f:Card>
 
-                    <!-- Approver Card (role-gated) -->
-                    <f:Card class="sapUiSmallMarginEnd sapUiSmallMarginBottom"
-                            width="320px"
-                            visible="{/isApprover}">
-                        <f:header>
-                            <card:Header
-                                title="Pending Approvals"
-                                subtitle="{/pendingApprovalCount} awaiting review"
-                                iconSrc="sap-icon://approvals"/>
-                        </f:header>
-                        <f:content>
-                            <VBox class="sapUiSmallMargin">
-                                <Text text="Review and act on RTI requests submitted by employees."/>
-                                <Button text="Open Approval Queue"
-                                        type="Attention"
-                                        press=".onOpenApprovals"
-                                        class="sapUiSmallMarginTop"/>
-                            </VBox>
-                        </f:content>
-                    </f:Card>
+                    <!-- Approver + Admin cards stacked vertically -->
+                    <VBox class="sapUiSmallMarginEnd">
+                        <f:Card class="sapUiSmallMarginBottom"
+                                width="320px"
+                                visible="{/isApprover}">
+                            <f:header>
+                                <card:Header
+                                    title="Pending Approvals"
+                                    subtitle="{/pendingApprovalCount} awaiting review"
+                                    iconSrc="sap-icon://approvals"/>
+                            </f:header>
+                            <f:content>
+                                <VBox class="sapUiSmallMargin">
+                                    <Text text="Review and act on RTI requests submitted by employees."/>
+                                    <Button text="Open Approval Queue"
+                                            type="Attention"
+                                            press=".onOpenApprovals"
+                                            class="sapUiSmallMarginTop"/>
+                                </VBox>
+                            </f:content>
+                        </f:Card>
 
-                    <!-- Admin Card (role-gated) -->
-                    <f:Card class="sapUiSmallMarginEnd sapUiSmallMarginBottom"
-                            width="320px"
-                            visible="{/isAdmin}">
-                        <f:header>
-                            <card:Header
-                                title="Admin Settings"
-                                subtitle="Project &amp; scope configuration"
-                                iconSrc="sap-icon://settings"/>
-                        </f:header>
-                        <f:content>
-                            <VBox class="sapUiSmallMargin">
-                                <layout:HorizontalLayout class="sapUiSmallMarginBottom">
-                                    <ObjectNumber number="{/totalRequests}" unit="Total" class="sapUiSmallMarginEnd"/>
-                                    <ObjectNumber number="{/pendingRequests}" unit="Pending" state="Warning" class="sapUiSmallMarginEnd"/>
-                                    <ObjectNumber number="{/completedRequests}" unit="Completed" state="Success"/>
-                                </layout:HorizontalLayout>
-                                <Button text="Open Settings"
-                                        type="Default"
-                                        press=".onOpenDashboard"
-                                        class="sapUiSmallMarginTop"/>
-                            </VBox>
-                        </f:content>
-                    </f:Card>
+                        <f:Card class="sapUiSmallMarginBottom"
+                                width="320px"
+                                visible="{/isAdmin}"
+                                height="100%">
+                            <f:header>
+                                <card:Header
+                                    title="Admin Settings"
+                                    subtitle="Configure Projects and Scopes"
+                                    iconSrc="sap-icon://settings"/>
+                            </f:header>
+                            <f:content>
+                                <VBox class="sapUiSmallMargin">
+                                    <Button text="Open Settings"
+                                            type="Default"
+                                            press=".onOpenDashboard"
+                                            class="sapUiSmallMarginTop"/>
+                                </VBox>
+                            </f:content>
+                        </f:Card>
+                    </VBox>
 
-                </layout:HorizontalLayout>
+                </HBox>
             </layout:VerticalLayout>
         </content>
     </Page>

@@ -37,3 +37,10 @@ mta_archives/
 build/ui-deployer/
 build/dist/
 env/
+
+# Environment / credentials
+.env
+.env.private
+
+# Build output
+resources/

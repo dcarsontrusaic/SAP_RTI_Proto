@@ -7,12 +7,22 @@ sap.ui.define([
 
     return Controller.extend("com.trusaic.rti.home.controller.Home", {
 
+        formatDate: function (sDate) {
+            if (!sDate) { return ""; }
+            var oDate = new Date(sDate);
+            if (isNaN(oDate.getTime())) { return sDate; }
+            return oDate.toLocaleDateString("en-US", {
+                year: "numeric", month: "short", day: "numeric"
+            });
+        },
+
         onInit: function () {
             var oViewModel = new JSONModel({
                 userRole: "",
                 isApprover: false,
                 isAdmin: false,
                 myRequestCount: 0,
+                recentRequests: [],
                 pendingApprovalCount: 0,
                 totalRequests: 0,
                 pendingRequests: 0,
@@ -24,7 +34,6 @@ sap.ui.define([
         },
 
         _loadUserRole: function () {
-            var oModel = this.getView().getModel();
             var oViewModel = this.getView().getModel();
             var sUrl = "/api/admin/Users?$filter=role eq 'Admin'&$top=1";
             fetch(sUrl)
@@ -56,6 +65,19 @@ sap.ui.define([
 
         _loadMyRequestCount: function () {
             var oViewModel = this.getView().getModel();
+
+            // Fetch top 3 recent requests (for the preview table) and derive count
+            fetch("/api/employee/MyRequests?$orderby=submittedAt desc&$top=3")
+                .then(function (response) { return response.json(); })
+                .then(function (data) {
+                    var aRequests = data.value || [];
+                    oViewModel.setProperty("/recentRequests", aRequests);
+                }.bind(this))
+                .catch(function () {
+                    oViewModel.setProperty("/recentRequests", []);
+                });
+
+            // Separate count call for the accurate total
             fetch("/api/employee/MyRequests/$count")
                 .then(function (response) { return response.text(); })
                 .then(function (count) {
@@ -105,6 +127,14 @@ sap.ui.define([
         onViewMyRequests: function () {
             var oRouter = sap.ui.core.UIComponent.getRouterFor(this);
             oRouter.navTo("myRequests");
+        },
+
+        onRecentRequestPress: function (oEvent) {
+            var oCtx = oEvent.getSource().getBindingContext();
+            var sRequestId = oCtx ? oCtx.getProperty("ID") : null;
+            if (!sRequestId) { return; }
+            var oRouter = sap.ui.core.UIComponent.getRouterFor(this);
+            oRouter.navTo("requestDetail", { requestId: sRequestId });
         },
 
         onOpenApprovals: function () {
