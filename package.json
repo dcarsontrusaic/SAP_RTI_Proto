@@ -12,7 +12,8 @@
         "@sap/xssec": "^4.12.2",
         "express": "^4",
         "hdb": "^2.27.1",
-        "passport": "^0.7.0"
+        "passport": "^0.7.0",
+        "uuid": "^13.0.0"
     },
     "devDependencies": {
         "@cap-js/sqlite": "^2",
@@ -26,7 +27,11 @@
     },
     "private": true,
     "cds": {
-        "roots": ["db/", "srv/", "app/"],
+        "roots": [
+            "db/",
+            "srv/",
+            "app/"
+        ],
         "requires": {
             "[production]": {
                 "db": "hana",
