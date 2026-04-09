@@ -8,15 +8,15 @@
     controllerName="com.trusaic.rti.home.controller.Home"
     displayBlock="true">
 
-    <Page showHeader="false"
-          showNavButton="false">
+    <Page showHeader="false" showNavButton="false">
         <content>
             <layout:VerticalLayout class="sapUiMediumMargin" width="100%">
                 <Title text="Welcome" level="H2" class="sapUiMediumMarginBottom"/>
                 <Text text="Select an action below to get started." class="sapUiMediumMarginBottom"/>
+
                 <HBox wrap="Wrap" class="sapUiMediumMarginTop" alignItems="Stretch">
 
-                    <!-- Combined My Requests card -->
+                    <!-- Card 1: My Requests -->
                     <f:Card class="sapUiSmallMarginEnd sapUiSmallMarginBottom" width="520px">
                         <f:header>
                             <card:Header
@@ -87,48 +87,47 @@
                         </f:content>
                     </f:Card>
 
-                    <!-- Approver + Admin cards stacked vertically -->
-                    <VBox class="sapUiSmallMarginEnd">
-                        <f:Card class="sapUiSmallMarginBottom"
-                                width="320px"
-                                visible="{/isApprover}">
-                            <f:header>
-                                <card:Header
-                                    title="Pending Approvals"
-                                    subtitle="{/pendingApprovalCount} awaiting review"
-                                    iconSrc="sap-icon://approvals"/>
-                            </f:header>
-                            <f:content>
-                                <VBox class="sapUiSmallMargin">
-                                    <Text text="Review and act on RTI requests submitted by employees."/>
-                                    <Button text="Open Approval Queue"
-                                            type="Attention"
-                                            press=".onOpenApprovals"
-                                            class="sapUiSmallMarginTop"/>
-                                </VBox>
-                            </f:content>
-                        </f:Card>
+                    <!-- Card 2: Pending Approvals -->
+                    <f:Card class="sapUiSmallMarginEnd sapUiSmallMarginBottom"
+                            width="320px"
+                            visible="{/isApprover}">
+                        <f:header>
+                            <card:Header
+                                title="Pending Approvals"
+                                subtitle="{/pendingApprovalCount} awaiting review"
+                                iconSrc="sap-icon://approvals"/>
+                        </f:header>
+                        <f:content>
+                            <VBox class="sapUiSmallMargin" height="298px">
+                                <Text text="Review and act on RTI requests submitted by employees."/>
+                                <Button text="Open Approval Queue"
+                                        type="Attention"
+                                        press=".onOpenApprovals"
+                                        class="sapUiSmallMarginTop"/>
+                            </VBox>
+                        </f:content>
+                    </f:Card>
 
-                        <f:Card class="sapUiSmallMarginBottom"
-                                width="320px"
-                                visible="{/isAdmin}"
-                                height="100%">
-                            <f:header>
-                                <card:Header
-                                    title="Admin Settings"
-                                    subtitle="Configure Projects and Scopes"
-                                    iconSrc="sap-icon://settings"/>
-                            </f:header>
-                            <f:content>
-                                <VBox class="sapUiSmallMargin">
-                                    <Button text="Open Settings"
-                                            type="Default"
-                                            press=".onOpenDashboard"
-                                            class="sapUiSmallMarginTop"/>
-                                </VBox>
-                            </f:content>
-                        </f:Card>
-                    </VBox>
+                    <!-- Card 3: Admin Settings -->
+                    <f:Card class="sapUiSmallMarginEnd sapUiSmallMarginBottom"
+                            width="320px"
+                            visible="{/isAdmin}">
+                        <f:header>
+                            <card:Header
+                                title="Admin Settings"
+                                subtitle="Configure Projects and Scopes"
+                                iconSrc="sap-icon://settings"/>
+                        </f:header>
+                        <f:content>
+                            <VBox class="sapUiSmallMargin" height="298px">
+                                <Text text="Configure project mappings and scope assignments for your organization."
+                                      class="sapUiSmallMarginBottom"/>
+                                <Button text="Open Settings"
+                                        type="Default"
+                                        press=".onOpenDashboard"/>
+                            </VBox>
+                        </f:content>
+                    </f:Card>
 
                 </HBox>
             </layout:VerticalLayout>
