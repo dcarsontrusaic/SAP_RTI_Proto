@@ -11,74 +11,156 @@
           navButtonPress=".onNavBack">
         <content>
             <IconTabBar id="adminTabs" selectedKey="projectMapping" class="sapUiNoContentPadding">
-
-                <!-- Tab 1: Project Mapping -->
                 <items>
+
+                    <!-- Tab 1: Project Mapping -->
                     <IconTabFilter key="projectMapping" text="Project Mapping" icon="sap-icon://group">
                         <layout:VerticalLayout class="sapUiMediumMargin" width="auto">
-                            <Title text="Map Employees to Trusaic Projects" level="H3" class="sapUiSmallMarginBottom"/>
-                            <Text text="Assign individual employees or groups to a PayParity project. Each mapping determines which project context is used when generating RTI reports."
+                            <Title text="Map Employee Groups to Trusaic Projects" level="H3" class="sapUiSmallMarginBottom"/>
+                            <Text text="For each PayParity project, assign which employee groups can submit requests (requestors) and which groups can approve them (approvers)."
                                   class="sapUiSmallMarginBottom" wrapping="true"/>
 
-                            <!-- Add new mapping -->
-                            <Panel headerText="Add Mapping" class="sapUiSmallMarginBottom">
+                            <!-- Add Project Mapping -->
+                            <Panel headerText="Add Project Mapping" class="sapUiSmallMarginBottom">
                                 <content>
-                                    <HBox class="sapUiSmallMargin" alignItems="End" wrap="Wrap">
-                                        <VBox class="sapUiSmallMarginEnd">
-                                            <Label text="Assignment Type" required="true"/>
-                                            <Select id="pmAssignmentType"
-                                                    selectedKey="{admin>/pm/newAssignmentType}"
-                                                    change=".onPmTypeChange">
-                                                <items>
-                                                    <core:Item key="Employee" text="Individual Employee"/>
-                                                    <core:Item key="Department" text="Department"/>
-                                                    <core:Item key="Location" text="Location"/>
-                                                    <core:Item key="Custom" text="Custom Group"/>
-                                                </items>
-                                            </Select>
-                                        </VBox>
-                                        <VBox class="sapUiSmallMarginEnd">
-                                            <Label text="Employee / Group" required="true"/>
-                                            <Input id="pmTarget"
-                                                   value="{admin>/pm/newTarget}"
-                                                   placeholder="e.g. EMP001 or Engineering"
-                                                   width="220px"/>
-                                        </VBox>
-                                        <VBox class="sapUiSmallMarginEnd">
-                                            <Label text="Trusaic Project" required="true"/>
-                                            <Input id="pmProject"
-                                                   value="{admin>/pm/newProject}"
-                                                   placeholder="e.g. PP-PROJ-2025-001"
-                                                   width="220px"/>
-                                        </VBox>
-                                        <Button text="Add"
+                                    <layout:VerticalLayout class="sapUiSmallMargin" width="100%">
+
+                                        <!-- Project selection -->
+                                        <HBox alignItems="End" wrap="Wrap" class="sapUiSmallMarginBottom">
+                                            <VBox class="sapUiSmallMarginEnd">
+                                                <Label text="Trusaic Project" required="true"/>
+                                                <ComboBox id="pmProject"
+                                                          value="{admin>/pm/newProject}"
+                                                          placeholder="Type or select a project..."
+                                                          width="300px"
+                                                          items="{admin>/suggestions/projects}">
+                                                    <core:ListItem key="{admin>key}" text="{admin>text}"/>
+                                                </ComboBox>
+                                            </VBox>
+                                        </HBox>
+
+                                        <!-- Requestor entry -->
+                                        <HBox alignItems="End" wrap="Wrap" class="sapUiSmallMarginBottom">
+                                            <VBox class="sapUiSmallMarginEnd">
+                                                <Label text="Group Type"/>
+                                                <Select id="pmRequestorType"
+                                                        selectedKey="{admin>/pm/newRequestorType}"
+                                                        change=".onRequestorTypeChange"
+                                                        width="180px">
+                                                    <items>
+                                                        <core:Item key="SFDynamic" text="SF Dynamic Group"/>
+                                                        <core:Item key="SFStatic" text="SF Static Group"/>
+                                                        <core:Item key="IASGroup" text="IAS User Group"/>
+                                                        <core:Item key="RoleCollection" text="BTP Role Collection"/>
+                                                        <core:Item key="Individual" text="Individual User"/>
+                                                    </items>
+                                                </Select>
+                                            </VBox>
+                                            <VBox class="sapUiSmallMarginEnd">
+                                                <Label text="Requestor"/>
+                                                <ComboBox id="pmRequestorValue"
+                                                          value="{admin>/pm/newRequestorValue}"
+                                                          placeholder="Type or select..."
+                                                          width="260px"
+                                                          items="{admin>/pm/filteredRequestorSuggestions}">
+                                                    <core:ListItem key="{admin>key}" text="{admin>text}"/>
+                                                </ComboBox>
+                                            </VBox>
+                                            <Button text="Add Requestor"
+                                                    icon="sap-icon://add"
+                                                    type="Default"
+                                                    press=".onPmAddRequestor"
+                                                    class="sapUiSmallMarginBottom"/>
+                                        </HBox>
+
+                                        <!-- Staged requestors -->
+                                        <HBox visible="{= ${admin>/pm/pendingRequestors}.length > 0}"
+                                              class="sapUiSmallMarginBottom" wrap="Wrap" alignItems="Center">
+                                            <Label text="Requestors:" class="sapUiSmallMarginEnd"/>
+                                            <HBox items="{admin>/pm/pendingRequestors}" wrap="Wrap">
+                                                <Token text="{admin>display}" editable="false" class="sapUiTinyMarginEnd"/>
+                                            </HBox>
+                                            <Button icon="sap-icon://sys-cancel"
+                                                    type="Transparent"
+                                                    press=".onPmClearRequestors"
+                                                    tooltip="Clear all requestors"/>
+                                        </HBox>
+
+                                        <!-- Approver entry -->
+                                        <HBox alignItems="End" wrap="Wrap" class="sapUiSmallMarginBottom">
+                                            <VBox class="sapUiSmallMarginEnd">
+                                                <Label text="Group Type"/>
+                                                <Select id="pmApproverType"
+                                                        selectedKey="{admin>/pm/newApproverType}"
+                                                        change=".onApproverTypeChange"
+                                                        width="180px">
+                                                    <items>
+                                                        <core:Item key="SFDynamic" text="SF Dynamic Group"/>
+                                                        <core:Item key="SFStatic" text="SF Static Group"/>
+                                                        <core:Item key="IASGroup" text="IAS User Group"/>
+                                                        <core:Item key="RoleCollection" text="BTP Role Collection"/>
+                                                        <core:Item key="Individual" text="Individual User"/>
+                                                    </items>
+                                                </Select>
+                                            </VBox>
+                                            <VBox class="sapUiSmallMarginEnd">
+                                                <Label text="Approver"/>
+                                                <ComboBox id="pmApproverValue"
+                                                          value="{admin>/pm/newApproverValue}"
+                                                          placeholder="Type or select..."
+                                                          width="260px"
+                                                          items="{admin>/pm/filteredApproverSuggestions}">
+                                                    <core:ListItem key="{admin>key}" text="{admin>text}"/>
+                                                </ComboBox>
+                                            </VBox>
+                                            <Button text="Add Approver"
+                                                    icon="sap-icon://add"
+                                                    type="Default"
+                                                    press=".onPmAddApprover"
+                                                    class="sapUiSmallMarginBottom"/>
+                                        </HBox>
+
+                                        <!-- Staged approvers -->
+                                        <HBox visible="{= ${admin>/pm/pendingApprovers}.length > 0}"
+                                              class="sapUiSmallMarginBottom" wrap="Wrap" alignItems="Center">
+                                            <Label text="Approvers:" class="sapUiSmallMarginEnd"/>
+                                            <HBox items="{admin>/pm/pendingApprovers}" wrap="Wrap">
+                                                <Token text="{admin>display}" editable="false" class="sapUiTinyMarginEnd"/>
+                                            </HBox>
+                                            <Button icon="sap-icon://sys-cancel"
+                                                    type="Transparent"
+                                                    press=".onPmClearApprovers"
+                                                    tooltip="Clear all approvers"/>
+                                        </HBox>
+
+                                        <Button text="Save Project Mapping"
                                                 type="Emphasized"
-                                                icon="sap-icon://add"
+                                                icon="sap-icon://save"
                                                 press=".onPmAdd"
-                                                class="sapUiSmallMarginBottom"/>
-                                    </HBox>
+                                                class="sapUiSmallMarginTop"/>
+                                    </layout:VerticalLayout>
                                 </content>
                             </Panel>
 
-                            <!-- Current mappings table -->
+                            <!-- Current project mappings table -->
                             <Table items="{admin>/pm/mappings}" mode="None">
                                 <headerToolbar>
                                     <Toolbar>
-                                        <Title text="Current Mappings ({admin>/pm/count})"/>
+                                        <Title text="Current Project Mappings ({admin>/pm/count})"/>
                                     </Toolbar>
                                 </headerToolbar>
                                 <columns>
-                                    <Column><Text text="Type"/></Column>
-                                    <Column><Text text="Employee / Group"/></Column>
-                                    <Column><Text text="Trusaic Project"/></Column>
+                                    <Column width="14em"><Text text="Trusaic Project"/></Column>
+                                    <Column><Text text="Requestors"/></Column>
+                                    <Column><Text text="Approvers"/></Column>
                                     <Column width="5em"><Text text="Actions"/></Column>
                                 </columns>
                                 <items>
                                     <ColumnListItem>
                                         <cells>
-                                            <Text text="{admin>type}"/>
-                                            <Text text="{admin>target}"/>
                                             <Text text="{admin>project}"/>
+                                            <Text text="{admin>requestorsDisplay}" wrapping="true"/>
+                                            <Text text="{admin>approversDisplay}" wrapping="true"/>
                                             <Button icon="sap-icon://delete"
                                                     type="Transparent"
                                                     press=".onPmDelete"/>
@@ -89,21 +171,19 @@
                         </layout:VerticalLayout>
                     </IconTabFilter>
 
-                    <!-- Tab 2: Scope Mapping -->
+                    <!-- Tab 2: Scope Mapping (unchanged) -->
                     <IconTabFilter key="scopeMapping" text="Scope Mapping" icon="sap-icon://locked">
                         <layout:VerticalLayout class="sapUiMediumMargin" width="auto">
                             <Title text="Map Users &amp; Roles to App Scopes" level="H3" class="sapUiSmallMarginBottom"/>
                             <Text text="Assign SuccessFactors users, roles, role collections, or groups to an RTI app scope. This controls which screens and actions each user can access."
                                   class="sapUiSmallMarginBottom" wrapping="true"/>
 
-                            <!-- Add new scope mapping -->
                             <Panel headerText="Add Scope Mapping" class="sapUiSmallMarginBottom">
                                 <content>
                                     <HBox class="sapUiSmallMargin" alignItems="End" wrap="Wrap">
                                         <VBox class="sapUiSmallMarginEnd">
                                             <Label text="Source Type" required="true"/>
-                                            <Select id="smSourceType"
-                                                    selectedKey="{admin>/sm/newSourceType}">
+                                            <Select id="smSourceType" selectedKey="{admin>/sm/newSourceType}">
                                                 <items>
                                                     <core:Item key="User" text="SF User"/>
                                                     <core:Item key="Role" text="SF Role"/>
@@ -121,8 +201,7 @@
                                         </VBox>
                                         <VBox class="sapUiSmallMarginEnd">
                                             <Label text="App Scope" required="true"/>
-                                            <Select id="smAppScope"
-                                                    selectedKey="{admin>/sm/newAppScope}">
+                                            <Select id="smAppScope" selectedKey="{admin>/sm/newAppScope}">
                                                 <items>
                                                     <core:Item key="Employee" text="Employee"/>
                                                     <core:Item key="Approver" text="Approver"/>
@@ -139,7 +218,6 @@
                                 </content>
                             </Panel>
 
-                            <!-- Current scope mappings table -->
                             <Table items="{admin>/sm/mappings}" mode="None">
                                 <headerToolbar>
                                     <Toolbar>
@@ -160,8 +238,7 @@
                                             <ObjectStatus
                                                 text="{admin>appScope}"
                                                 state="{= ${admin>appScope} === 'Admin' ? 'Error' :
-                                                         ${admin>appScope} === 'Approver' ? 'Warning' :
-                                                         'Success'}"/>
+                                                         ${admin>appScope} === 'Approver' ? 'Warning' : 'Success'}"/>
                                             <Button icon="sap-icon://delete"
                                                     type="Transparent"
                                                     press=".onSmDelete"/>
