@@ -1,8 +1,23 @@
 <mvc:View
     xmlns:mvc="sap.ui.core.mvc"
     xmlns="sap.m"
+    xmlns:layout="sap.ui.layout"
     displayBlock="true">
 
-    <App id="appControl"/>
+    <layout:VerticalLayout width="100%">
+        <Toolbar height="44px" style="background:#354a5e;">
+            <Title text="Pay Transparency — Right to Information"
+                   style="color:white; font-size:14px;"/>
+            <ToolbarSpacer/>
+            <Image src="img/sap-logo.png"
+                   height="24px"
+                   tooltip="SAP"/>
+            <Image src="./img/trusaic-logo.png"
+                height="28px"
+                class="sapUiSmallMarginEnd"
+                tooltip="Trusaic"/>
+        </Toolbar>
+        <App id="appControl" width="100%"/>
+    </layout:VerticalLayout>
 
 </mvc:View>

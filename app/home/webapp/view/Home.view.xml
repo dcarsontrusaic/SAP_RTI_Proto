@@ -8,11 +8,8 @@
     controllerName="com.trusaic.rti.home.controller.Home"
     displayBlock="true">
 
-    <Page title="Pay Transparency — Right to Information"
+    <Page showHeader="false"
           showNavButton="false">
-        <headerContent>
-            <Title text="{/userRole}" class="sapUiSmallMarginEnd"/>
-        </headerContent>
         <content>
             <layout:VerticalLayout class="sapUiMediumMargin" width="100%">
                 <Title text="Welcome" level="H2" class="sapUiMediumMarginBottom"/>
