@@ -100,6 +100,7 @@
                        visible="{= ${detail>/request/status} === 'Completed' &amp;&amp; !!${detail>/report}}">
                     <content>
                         <layout:VerticalLayout class="sapUiSmallMargin" width="100%">
+
                             <Panel headerText="Employee Details"
                                    visible="{= !!${detail>/reportParsed/data/employee}}"
                                    class="sapUiSmallMarginBottom">
@@ -108,23 +109,21 @@
                                           renderType="Bare" wrap="Wrap"/>
                                 </content>
                             </Panel>
+
                             <Panel headerText="Employee Pay"
                                    class="sapUiSmallMarginBottom">
                                 <content>
-                                    <HBox id="employeePayBox" class="sapUiSmallMargin"
-                                          renderType="Bare" wrap="Wrap"/>
+                                    <VBox id="employeePayBox" class="sapUiSmallMargin"/>
                                 </content>
                             </Panel>
+
                             <Panel headerText="Comparison Group"
                                    class="sapUiSmallMarginBottom">
                                 <content>
-                                    <HBox id="compGroupPayBox" class="sapUiSmallMargin"
-                                          renderType="Bare" wrap="Wrap"/>
+                                    <VBox id="compGroupPayBox" class="sapUiSmallMargin"/>
                                 </content>
                             </Panel>
-                            <Text text="Comparison Group Size: {detail>/reportParsed/data/comparisonGroupSize} employees"
-                                  visible="{= !!${detail>/reportParsed/data/comparisonGroupSize}}"
-                                  class="sapUiSmallMarginBottom"/>
+
                             <Panel headerText="Narrative"
                                    visible="{= !!${detail>/report/narrative}}"
                                    class="sapUiSmallMarginBottom">
@@ -133,6 +132,7 @@
                                           wrapping="true"/>
                                 </content>
                             </Panel>
+
                             <Link text="Download PDF Report"
                                   href="{detail>/report/reportFileUrl}"
                                   target="_blank"

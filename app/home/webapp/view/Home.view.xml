@@ -49,7 +49,7 @@
                                     </headerToolbar>
                                     <columns>
                                         <Column>
-                                            <Text text="Request Type"/>
+                                            <Text text="Language"/>
                                         </Column>
                                         <Column width="8em">
                                             <Text text="Submitted"/>
@@ -61,7 +61,7 @@
                                     <items>
                                         <ColumnListItem type="Navigation" press=".onRecentRequestPress">
                                             <cells>
-                                                <Text text="{requestType}"/>
+                                                <Text text="{comparisonGroup}"/>
                                                 <Text text="{parts: ['submittedAt'], formatter: '.formatDate'}"/>
                                                 <ObjectStatus
                                                     text="{= ${status} === 'UnderReview' ? 'Under Review' : ${status}}"

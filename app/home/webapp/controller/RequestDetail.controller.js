@@ -5,9 +5,27 @@ sap.ui.define([
     "sap/m/Label",
     "sap/m/ObjectNumber",
     "sap/m/VBox",
+    "sap/m/HBox",
+    "sap/m/Table",
+    "sap/m/Column",
+    "sap/m/ColumnListItem",
     "sap/m/MessageToast"
-], function (Controller, JSONModel, Text, Label, ObjectNumber, VBox, MessageToast) {
+], function (Controller, JSONModel, Text, Label, ObjectNumber, VBox, HBox, Table, Column, ColumnListItem, MessageToast) {
     "use strict";
+
+    // Display labels for the well-known pay types and breakdowns.
+    // Unknown keys fall through to an auto-generated label (camelCase → "Camel Case").
+    var PAY_TYPE_LABELS = {
+        basePay:          "Base Pay",
+        complementaryPay: "Complementary / Variable Pay",
+        totalRewards:     "Total Rewards"
+    };
+
+    var BREAKDOWN_LABELS = {
+        all:    "All Employees",
+        male:   "Male",
+        female: "Female"
+    };
 
     return Controller.extend("com.trusaic.rti.home.controller.RequestDetail", {
 
@@ -76,61 +94,190 @@ sap.ui.define([
                 });
         },
 
-        _renderReportData: function (oReportData) {
-            var oSchema = oReportData.schema;
-            var oData = oReportData.data;
+        // ---------- Rendering ----------
 
+        _renderReportData: function (oReportData) {
+            var oSchema = oReportData.schema || {};
+            var oData   = oReportData.data   || {};
+
+            // Employee details chips (kept as an HBox with small label/value pairs)
             var oEmpBox = this.byId("employeeDetailsBox");
-            if (oEmpBox && oData.employee) {
+            if (oEmpBox && oData.employee && oSchema.employeeFields) {
                 oEmpBox.removeAllItems();
-                oSchema.employeeFields.forEach(function (field) {
-                    var sLabel = field.replace(/([A-Z])/g, " $1")
-                        .replace(/^./, function (s) { return s.toUpperCase(); });
+                oSchema.employeeFields.forEach(function (sField) {
                     oEmpBox.addItem(new VBox({
                         items: [
-                            new Label({ text: sLabel }),
-                            new Text({ text: oData.employee[field] || "—" })
+                            new Label({ text: this._humanize(sField) }),
+                            new Text({ text: oData.employee[sField] || "—" })
                         ]
                     }).addStyleClass("sapUiSmallMarginEnd"));
-                });
+                }.bind(this));
             }
 
+            // Employee Pay — single table, rows = pay types, cols = Annual (+ Hourly)
             var oEmpPayBox = this.byId("employeePayBox");
             if (oEmpPayBox && oData.employeePay) {
                 oEmpPayBox.removeAllItems();
-                this._renderPaySection(oEmpPayBox, oData.employeePay, oSchema);
+                oEmpPayBox.addItem(this._buildEmployeePayTable(oSchema, oData.employeePay));
             }
 
+            // Comparison Group — one table with rows = pay types and a column per breakdown
             var oCompBox = this.byId("compGroupPayBox");
             if (oCompBox && oData.comparisonGroup) {
                 oCompBox.removeAllItems();
-                this._renderPaySection(oCompBox, oData.comparisonGroup, oSchema);
+                oCompBox.addItem(this._buildComparisonGroupTable(oSchema, oData.comparisonGroup));
             }
         },
 
-        _renderPaySection: function (oContainer, oPayData, oSchema) {
-            oSchema.payTypes.forEach(function (payType) {
-                var oPay = oPayData[payType];
-                if (!oPay) { return; }
-                var sLabel = payType.replace(/([A-Z])/g, " $1")
-                    .replace(/^./, function (s) { return s.toUpperCase(); });
-                var aItems = [
-                    new Label({ text: sLabel }),
-                    new ObjectNumber({
-                        number: oPay.annual.toLocaleString(),
-                        unit: oPay.currency + " / year"
-                    })
-                ];
-                if (oSchema.includeHourly && oPay.hourly) {
-                    aItems.push(new ObjectNumber({
-                        number: oPay.hourly.toFixed(2),
-                        unit: oPay.currency + " / hour"
-                    }));
-                }
-                oContainer.addItem(new VBox({
-                    items: aItems
-                }).addStyleClass("sapUiSmallMarginEnd"));
+        /**
+         * Employee Pay table:
+         *   | Pay Type            | Annual       | Hourly  |
+         *   | Base Pay            | 125,000 USD  | 60.10   |
+         *   | Complementary Pay   | 18,000 USD   | 8.65    |
+         *   | Total Rewards       | 155,000 USD  | 74.52   |
+         */
+        _buildEmployeePayTable: function (oSchema, oEmployeePay) {
+            var aPayTypes = oSchema.payTypes || [];
+            var bHourly   = !!oSchema.includeHourly;
+
+            var aColumns = [
+                new Column({ header: new Label({ text: "Pay Type" }) }),
+                new Column({ header: new Label({ text: "Annual" }), hAlign: "End" })
+            ];
+            if (bHourly) {
+                aColumns.push(new Column({ header: new Label({ text: "Hourly" }), hAlign: "End" }));
+            }
+
+            var oTable = new Table({
+                columns: aColumns,
+                inset: false,
+                showSeparators: "All"
             });
+
+            aPayTypes.forEach(function (sPayType) {
+                var oPay = oEmployeePay[sPayType] || {};
+                var aCells = [
+                    new Text({ text: this._payTypeLabel(sPayType) }),
+                    new Text({ text: this._formatAnnual(oPay), textAlign: "End" })
+                ];
+                if (bHourly) {
+                    aCells.push(new Text({ text: this._formatHourly(oPay), textAlign: "End" }));
+                }
+                oTable.addItem(new ColumnListItem({ cells: aCells }));
+            }.bind(this));
+
+            return oTable;
+        },
+
+        /**
+         * Comparison Group table:
+         *   | Pay Type            | All Employees | Male        | Female      |
+         *   | Base Pay            | 121,000 USD   | 123,500 ... | 117,000 ... |
+         *   | Complementary Pay   | 17,500 USD    | ...         | ...         |
+         *   | Total Rewards       | 150,000 USD   | ...         | ...         |
+         *   | Number of Employees | 34            | 21          | 13          |
+         *
+         * Each pay-type cell shows the annual amount on the first line and,
+         * when includeHourly is true, the hourly amount on a smaller second line.
+         * The final row is rendered only when includeCompGroupSize is true.
+         */
+        _buildComparisonGroupTable: function (oSchema, oComparisonGroup) {
+            var aPayTypes   = oSchema.payTypes || [];
+            var aBreakdowns = oSchema.comparisonBreakdowns || ["all"];
+            var bHourly     = !!oSchema.includeHourly;
+            var bShowSize   = !!oSchema.includeCompGroupSize;
+
+            // Columns: first column is pay type label, then one per breakdown
+            var aColumns = [new Column({ header: new Label({ text: "Pay Type" }) })];
+
+            aBreakdowns.forEach(function (sBreakdown) {
+                aColumns.push(new Column({
+                    header: new Label({ text: this._breakdownLabel(sBreakdown) }),
+                    hAlign: "End"
+                }));
+            }.bind(this));
+
+            var oTable = new Table({
+                columns: aColumns,
+                inset: false,
+                showSeparators: "All"
+            });
+
+            // Pay-type rows
+            aPayTypes.forEach(function (sPayType) {
+                var aCells = [new Text({ text: this._payTypeLabel(sPayType) })];
+
+                aBreakdowns.forEach(function (sBreakdown) {
+                    var oGroup = oComparisonGroup[sBreakdown] || {};
+                    var oPay   = oGroup[sPayType] || {};
+
+                    // Primary = annual; secondary (if hourly enabled) = small hourly line
+                    var aLines = [
+                        new Text({ text: this._formatAnnual(oPay), textAlign: "End" })
+                    ];
+                    if (bHourly) {
+                        var oHourly = new Text({
+                            text: this._formatHourly(oPay),
+                            textAlign: "End"
+                        });
+                        oHourly.addStyleClass("sapUiTinyMarginTop");
+                        oHourly.addStyleClass("sapMTextColorSubtle");
+                        aLines.push(oHourly);
+                    }
+
+                    aCells.push(new VBox({
+                        items: aLines,
+                        alignItems: "End"
+                    }));
+                }.bind(this));
+
+                oTable.addItem(new ColumnListItem({ cells: aCells }));
+            }.bind(this));
+
+            // Final row: Number of Employees (only when includeCompGroupSize is true)
+            if (bShowSize) {
+                var aSizeCells = [
+                    new Label({ text: "Number of Employees", design: "Bold" })
+                ];
+                aBreakdowns.forEach(function (sBreakdown) {
+                    var oGroup = oComparisonGroup[sBreakdown] || {};
+                    var sSize  = (typeof oGroup.size === "number") ? oGroup.size.toString() : "—";
+                    aSizeCells.push(new Text({ text: sSize, textAlign: "End" }));
+                }.bind(this));
+                oTable.addItem(new ColumnListItem({ cells: aSizeCells }));
+            }
+
+            return oTable;
+        },
+
+        // ---------- Helpers ----------
+
+        _payTypeLabel: function (sKey) {
+            return PAY_TYPE_LABELS[sKey] || this._humanize(sKey);
+        },
+
+        _breakdownLabel: function (sKey) {
+            return BREAKDOWN_LABELS[sKey] || this._humanize(sKey);
+        },
+
+        _humanize: function (sKey) {
+            if (!sKey) { return ""; }
+            return sKey
+                .replace(/([A-Z])/g, " $1")
+                .replace(/^./, function (s) { return s.toUpperCase(); })
+                .trim();
+        },
+
+        _formatAnnual: function (oPay) {
+            if (!oPay || typeof oPay.annual !== "number") { return "—"; }
+            var sCurrency = oPay.currency ? " " + oPay.currency : "";
+            return oPay.annual.toLocaleString() + sCurrency + " / year";
+        },
+
+        _formatHourly: function (oPay) {
+            if (!oPay || typeof oPay.hourly !== "number") { return "—"; }
+            var sCurrency = oPay.currency ? " " + oPay.currency : "";
+            return oPay.hourly.toFixed(2) + sCurrency + " / hour";
         },
 
         onCloseDetail: function () {

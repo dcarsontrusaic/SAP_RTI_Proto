@@ -23,14 +23,6 @@ sap.ui.define([
             });
             this.getView().setModel(oViewModel, "view");
             this._allRequests = [];
-
-            // Reload data every time this view is shown (not just on first init)
-            var oRouter = sap.ui.core.UIComponent.getRouterFor(this);
-            oRouter.getRoute("myRequests").attachPatternMatched(this._onRouteMatched, this);
-            oRouter.getRoute("requestDetail").attachPatternMatched(this._onRouteMatched, this);
-        },
-
-        _onRouteMatched: function () {
             this._loadRequests();
         },
 
@@ -72,8 +64,7 @@ sap.ui.define([
             }
             var aFiltered = this._allRequests.filter(function (req) {
                 var bMatchSearch = !sSearchQuery ||
-                    (req.requestType || "").toLowerCase().indexOf(sSearchQuery) > -1 ||
-                    (req.comparisonGroup || "").toLowerCase().indexOf(sSearchQuery) > -1 || /* language */
+                    (req.comparisonGroup || "").toLowerCase().indexOf(sSearchQuery) > -1 ||
                     (req.ID || "").toLowerCase().indexOf(sSearchQuery) > -1;
                 var bMatchStatus = sStatusKey === "All" || req.status === sStatusKey;
                 return bMatchSearch && bMatchStatus;

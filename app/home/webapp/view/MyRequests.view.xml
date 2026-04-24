@@ -28,7 +28,7 @@
                     <OverflowToolbar>
                         <Title text="RTI Requests ({view>/requestCount})"/>
                         <ToolbarSpacer/>
-                        <SearchField placeholder="Search by type..." liveChange=".onSearch" width="250px"/>
+                        <SearchField placeholder="Search..." liveChange=".onSearch" width="250px"/>
                         <Select id="statusFilter"
                                 change=".onStatusFilterChange"
                                 selectedKey="All">
@@ -49,9 +49,6 @@
                         <Text text="Request ID"/>
                     </Column>
                     <Column>
-                        <Text text="Request Type"/>
-                    </Column>
-                    <Column>
                         <Text text="Language"/>
                     </Column>
                     <Column width="10em">
@@ -69,7 +66,6 @@
                     <ColumnListItem type="Navigation" press="onRequestPress">
                         <cells>
                             <Text text="{view>ID}"/>
-                            <Text text="{view>requestType}"/>
                             <Text text="{view>comparisonGroup}"/>
                             <Text text="{parts: ['view>submittedAt'], formatter: '.formatDate'}"/>
                             <ObjectStatus
