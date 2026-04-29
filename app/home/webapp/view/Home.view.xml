@@ -12,7 +12,11 @@
         <content>
             <layout:VerticalLayout class="sapUiMediumMargin" width="100%">
                 <Title text="Welcome" level="H2" class="sapUiMediumMarginBottom"/>
-                <Text text="Select an action below to get started." class="sapUiMediumMarginBottom"/>
+                <VBox width="55%" class="sapUiMediumMarginBottom">
+                    <Text
+                        text="Under Article 7 of the EU Pay Transparency Directive, you may request information about your current pay and comparative information for employees in comparable roles. You may create new requests and view the status of past requests here."
+                        wrapping="true"/>
+                </VBox>
 
                 <HBox wrap="Wrap" class="sapUiMediumMarginTop" alignItems="Stretch">
 
