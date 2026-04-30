@@ -17,7 +17,6 @@ sap.ui.define([
             { key: "PP-PROJ-2025-004", text: "PP-PROJ-2025-004 — EMEA All Departments" },
             { key: "PP-PROJ-2025-005", text: "PP-PROJ-2025-005 — APAC All Departments" }
         ],
-        // Keyed by group type
         SFDynamic: [
             { key: "US_Engineering",          text: "US_Engineering — Dept=Engineering, Country=US" },
             { key: "US_Marketing",            text: "US_Marketing — Dept=Marketing, Country=US" },
@@ -77,6 +76,28 @@ sap.ui.define([
         }).join(", ");
     }
 
+    function withDisplay(arr) {
+        return (arr || []).map(function (item) {
+            return {
+                type: item.type,
+                value: item.value,
+                display: "[" + typeLabel(item.type) + "] " + item.value
+            };
+        });
+    }
+
+    /**
+     * Look up a friendly display name for a user ID from the Individual catalog.
+     * Falls back to the key itself if not found.
+     */
+    function lookupUserName(sKey) {
+        var match = SUGGESTIONS.Individual.find(function (i) { return i.key === sKey; });
+        if (!match) { return ""; }
+        // text format is "EMP001 — Alice Chen", extract the name half
+        var idx = match.text.indexOf(" — ");
+        return idx > -1 ? match.text.substring(idx + 3).trim() : match.text;
+    }
+
     // ══════════════════════════════════════════════════════════════════
 
     return Controller.extend("com.trusaic.rti.home.controller.AdminSettings", {
@@ -129,9 +150,15 @@ sap.ui.define([
                 m.approversDisplay  = toDisplay(m.approvers);
             });
 
+            // ── Seed administrators ───────────────────────────────────
+            var aAdmins = [
+                { userId: "ADM001", name: "Fatima Al-Rashid" }
+            ];
+
             var oModel = new JSONModel({
                 suggestions: {
-                    projects: SUGGESTIONS.projects
+                    projects: SUGGESTIONS.projects,
+                    individuals: SUGGESTIONS.Individual
                 },
                 pm: {
                     newProject: "",
@@ -146,17 +173,22 @@ sap.ui.define([
                     count: aProjectMappings.length,
                     mappings: aProjectMappings
                 },
-                sm: {
-                    newSourceType: "User",
-                    newSourceValue: "",
-                    newAppScope: "Employee",
-                    count: 4,
-                    mappings: [
-                        { sourceType: "Group",          sourceValue: "ALL_EMPLOYEES",                appScope: "Employee" },
-                        { sourceType: "Role",           sourceValue: "HR_COMPENSATION_LEAD",         appScope: "Approver" },
-                        { sourceType: "RoleCollection", sourceValue: "RTI_Approvers",                appScope: "Approver" },
-                        { sourceType: "User",           sourceValue: "fatima.alrashid@trusaic.com",  appScope: "Admin" }
-                    ]
+                pmEdit: {
+                    editingIndex: -1,
+                    project: "",
+                    requestors: [],
+                    approvers: [],
+                    newRequestorType: "SFDynamic",
+                    newRequestorValue: "",
+                    newApproverType: "SFDynamic",
+                    newApproverValue: "",
+                    filteredRequestorSuggestions: SUGGESTIONS.SFDynamic,
+                    filteredApproverSuggestions: SUGGESTIONS.SFDynamic
+                },
+                admins: {
+                    newUser: "",
+                    count: aAdmins.length,
+                    list: aAdmins
                 }
             });
             this.getView().setModel(oModel, "admin");
@@ -188,9 +220,8 @@ sap.ui.define([
                 MessageToast.show("Select or type a requestor group.");
                 return;
             }
-            // Extract key portion if user picked a suggestion with description
             var sKey = this._extractKey(sVal);
-            var arr  = oModel.getProperty("/pm/pendingRequestors");
+            var arr  = oModel.getProperty("/pm/pendingRequestors").slice();
             var bDup = arr.some(function (r) { return r.type === sType && r.value === sKey; });
             if (bDup) {
                 MessageToast.show("\"" + sKey + "\" is already added.");
@@ -205,8 +236,16 @@ sap.ui.define([
             oModel.setProperty("/pm/newRequestorValue", "");
         },
 
-        onPmClearRequestors: function () {
-            this.getView().getModel("admin").setProperty("/pm/pendingRequestors", []);
+        onPmRemovePendingRequestor: function (oEvent) {
+            var oToken   = oEvent.getSource();
+            var oContext = oToken.getBindingContext("admin");
+            if (!oContext) { return; }
+            var sPath    = oContext.getPath();
+            var iIndex   = parseInt(sPath.split("/").pop(), 10);
+            var oModel   = this.getView().getModel("admin");
+            var arr      = oModel.getProperty("/pm/pendingRequestors").slice();
+            arr.splice(iIndex, 1);
+            oModel.setProperty("/pm/pendingRequestors", arr);
         },
 
         onPmAddApprover: function () {
@@ -218,7 +257,7 @@ sap.ui.define([
                 return;
             }
             var sKey = this._extractKey(sVal);
-            var arr  = oModel.getProperty("/pm/pendingApprovers");
+            var arr  = oModel.getProperty("/pm/pendingApprovers").slice();
             var bDup = arr.some(function (a) { return a.type === sType && a.value === sKey; });
             if (bDup) {
                 MessageToast.show("\"" + sKey + "\" is already added.");
@@ -233,15 +272,18 @@ sap.ui.define([
             oModel.setProperty("/pm/newApproverValue", "");
         },
 
-        onPmClearApprovers: function () {
-            this.getView().getModel("admin").setProperty("/pm/pendingApprovers", []);
+        onPmRemovePendingApprover: function (oEvent) {
+            var oToken   = oEvent.getSource();
+            var oContext = oToken.getBindingContext("admin");
+            if (!oContext) { return; }
+            var sPath    = oContext.getPath();
+            var iIndex   = parseInt(sPath.split("/").pop(), 10);
+            var oModel   = this.getView().getModel("admin");
+            var arr      = oModel.getProperty("/pm/pendingApprovers").slice();
+            arr.splice(iIndex, 1);
+            oModel.setProperty("/pm/pendingApprovers", arr);
         },
 
-        /**
-         * If the ComboBox value is "US_Engineering — Dept=Engineering, Country=US",
-         * extract just "US_Engineering" (the part before " — ").
-         * If there's no " — ", return the value as-is (custom typed entry).
-         */
         _extractKey: function (sVal) {
             var idx = sVal.indexOf(" — ");
             return idx > -1 ? sVal.substring(0, idx).trim() : sVal.trim();
@@ -267,7 +309,6 @@ sap.ui.define([
 
             var aMappings = oModel.getProperty("/pm/mappings");
 
-            // Check for existing project — merge if found
             var iExisting = -1;
             aMappings.forEach(function (m, i) {
                 if (m.project === sProject) { iExisting = i; }
@@ -302,17 +343,16 @@ sap.ui.define([
             oModel.setProperty("/pm/mappings", aMappings);
             oModel.setProperty("/pm/count", aMappings.length);
 
-            // Reset form
             oModel.setProperty("/pm/newProject", "");
             oModel.setProperty("/pm/pendingRequestors", []);
             oModel.setProperty("/pm/pendingApprovers", []);
         },
 
         onPmDelete: function (oEvent) {
-            var oItem    = oEvent.getSource().getParent();
-            var sPath    = oItem.getBindingContext("admin").getPath();
-            var iIndex   = parseInt(sPath.split("/").pop(), 10);
-            var oModel   = this.getView().getModel("admin");
+            var oRow      = oEvent.getSource().getParent().getParent();
+            var sPath     = oRow.getBindingContext("admin").getPath();
+            var iIndex    = parseInt(sPath.split("/").pop(), 10);
+            var oModel    = this.getView().getModel("admin");
             var aMappings = oModel.getProperty("/pm/mappings");
 
             MessageBox.confirm(
@@ -331,44 +371,228 @@ sap.ui.define([
             );
         },
 
-        // ═══ Scope Mapping (unchanged) ═══════════════════════════════
+        // ═══ Edit project mapping ════════════════════════════════════
 
-        onSmAdd: function () {
-            var oModel       = this.getView().getModel("admin");
-            var sSourceType  = oModel.getProperty("/sm/newSourceType");
-            var sSourceValue = (oModel.getProperty("/sm/newSourceValue") || "").trim();
-            var sAppScope    = oModel.getProperty("/sm/newAppScope");
+        onPmEdit: function (oEvent) {
+            var oRow      = oEvent.getSource().getParent().getParent();
+            var sPath     = oRow.getBindingContext("admin").getPath();
+            var iIndex    = parseInt(sPath.split("/").pop(), 10);
+            var oModel    = this.getView().getModel("admin");
+            var aMappings = oModel.getProperty("/pm/mappings");
+            var oMapping  = aMappings[iIndex];
 
-            if (!sSourceValue) {
-                MessageToast.show("Please provide a source value.");
+            oModel.setProperty("/pmEdit", {
+                editingIndex: iIndex,
+                project: oMapping.project,
+                requestors: withDisplay(oMapping.requestors),
+                approvers:  withDisplay(oMapping.approvers),
+                newRequestorType: "SFDynamic",
+                newRequestorValue: "",
+                newApproverType: "SFDynamic",
+                newApproverValue: "",
+                filteredRequestorSuggestions: SUGGESTIONS.SFDynamic,
+                filteredApproverSuggestions: SUGGESTIONS.SFDynamic
+            });
+
+            this.byId("pmEditDialog").open();
+        },
+
+        onPmEditRequestorTypeChange: function () {
+            var oModel = this.getView().getModel("admin");
+            var sType  = oModel.getProperty("/pmEdit/newRequestorType");
+            oModel.setProperty("/pmEdit/filteredRequestorSuggestions", SUGGESTIONS[sType] || []);
+            oModel.setProperty("/pmEdit/newRequestorValue", "");
+        },
+
+        onPmEditApproverTypeChange: function () {
+            var oModel = this.getView().getModel("admin");
+            var sType  = oModel.getProperty("/pmEdit/newApproverType");
+            oModel.setProperty("/pmEdit/filteredApproverSuggestions", SUGGESTIONS[sType] || []);
+            oModel.setProperty("/pmEdit/newApproverValue", "");
+        },
+
+        onPmEditAddRequestor: function () {
+            var oModel = this.getView().getModel("admin");
+            var sType  = oModel.getProperty("/pmEdit/newRequestorType");
+            var sVal   = (oModel.getProperty("/pmEdit/newRequestorValue") || "").trim();
+            if (!sVal) {
+                MessageToast.show("Select or type a requestor group.");
+                return;
+            }
+            var sKey = this._extractKey(sVal);
+            var arr  = oModel.getProperty("/pmEdit/requestors").slice();
+            var bDup = arr.some(function (r) { return r.type === sType && r.value === sKey; });
+            if (bDup) {
+                MessageToast.show("\"" + sKey + "\" is already added.");
+                return;
+            }
+            arr.push({
+                type: sType,
+                value: sKey,
+                display: "[" + typeLabel(sType) + "] " + sKey
+            });
+            oModel.setProperty("/pmEdit/requestors", arr);
+            oModel.setProperty("/pmEdit/newRequestorValue", "");
+        },
+
+        onPmEditAddApprover: function () {
+            var oModel = this.getView().getModel("admin");
+            var sType  = oModel.getProperty("/pmEdit/newApproverType");
+            var sVal   = (oModel.getProperty("/pmEdit/newApproverValue") || "").trim();
+            if (!sVal) {
+                MessageToast.show("Select or type an approver group.");
+                return;
+            }
+            var sKey = this._extractKey(sVal);
+            var arr  = oModel.getProperty("/pmEdit/approvers").slice();
+            var bDup = arr.some(function (a) { return a.type === sType && a.value === sKey; });
+            if (bDup) {
+                MessageToast.show("\"" + sKey + "\" is already added.");
+                return;
+            }
+            arr.push({
+                type: sType,
+                value: sKey,
+                display: "[" + typeLabel(sType) + "] " + sKey
+            });
+            oModel.setProperty("/pmEdit/approvers", arr);
+            oModel.setProperty("/pmEdit/newApproverValue", "");
+        },
+
+        onPmEditRemoveRequestor: function (oEvent) {
+            var oToken    = oEvent.getSource();
+            var oContext  = oToken.getBindingContext("admin");
+            if (!oContext) { return; }
+            var sPath     = oContext.getPath();
+            var iIndex    = parseInt(sPath.split("/").pop(), 10);
+            var oModel    = this.getView().getModel("admin");
+            var arr       = oModel.getProperty("/pmEdit/requestors").slice();
+            arr.splice(iIndex, 1);
+            oModel.setProperty("/pmEdit/requestors", arr);
+        },
+
+        onPmEditRemoveApprover: function (oEvent) {
+            var oToken    = oEvent.getSource();
+            var oContext  = oToken.getBindingContext("admin");
+            if (!oContext) { return; }
+            var sPath     = oContext.getPath();
+            var iIndex    = parseInt(sPath.split("/").pop(), 10);
+            var oModel    = this.getView().getModel("admin");
+            var arr       = oModel.getProperty("/pmEdit/approvers").slice();
+            arr.splice(iIndex, 1);
+            oModel.setProperty("/pmEdit/approvers", arr);
+        },
+
+        onPmEditSave: function () {
+            var oModel    = this.getView().getModel("admin");
+            var iIndex    = oModel.getProperty("/pmEdit/editingIndex");
+            if (iIndex < 0) { return; }
+
+            var aReq = oModel.getProperty("/pmEdit/requestors") || [];
+            var aApp = oModel.getProperty("/pmEdit/approvers")  || [];
+
+            if (aReq.length === 0 && aApp.length === 0) {
+                MessageBox.confirm(
+                    "This mapping has no requestors or approvers. Save anyway?",
+                    {
+                        title: "Empty Mapping",
+                        onClose: function (oAction) {
+                            if (oAction === MessageBox.Action.OK) {
+                                this._commitPmEdit();
+                            }
+                        }.bind(this)
+                    }
+                );
                 return;
             }
 
-            var aMappings = oModel.getProperty("/sm/mappings");
-            aMappings.push({ sourceType: sSourceType, sourceValue: sSourceValue, appScope: sAppScope });
-            oModel.setProperty("/sm/mappings", aMappings);
-            oModel.setProperty("/sm/count", aMappings.length);
-            oModel.setProperty("/sm/newSourceValue", "");
-            MessageToast.show("Scope mapping added.");
+            this._commitPmEdit();
         },
 
-        onSmDelete: function (oEvent) {
-            var oItem     = oEvent.getSource().getParent();
-            var sPath     = oItem.getBindingContext("admin").getPath();
-            var iIndex    = parseInt(sPath.split("/").pop(), 10);
+        _commitPmEdit: function () {
             var oModel    = this.getView().getModel("admin");
-            var aMappings = oModel.getProperty("/sm/mappings");
+            var iIndex    = oModel.getProperty("/pmEdit/editingIndex");
+            var aMappings = oModel.getProperty("/pm/mappings");
+            var oTarget   = aMappings[iIndex];
+            if (!oTarget) { return; }
+
+            var aReqClean = oModel.getProperty("/pmEdit/requestors").map(function (r) {
+                return { type: r.type, value: r.value };
+            });
+            var aAppClean = oModel.getProperty("/pmEdit/approvers").map(function (a) {
+                return { type: a.type, value: a.value };
+            });
+
+            oTarget.requestors        = aReqClean;
+            oTarget.approvers         = aAppClean;
+            oTarget.requestorsDisplay = toDisplay(aReqClean);
+            oTarget.approversDisplay  = toDisplay(aAppClean);
+
+            oModel.setProperty("/pm/mappings", aMappings);
+            this.byId("pmEditDialog").close();
+            MessageToast.show("Mapping updated.");
+        },
+
+        onPmEditCancel: function () {
+            this.byId("pmEditDialog").close();
+        },
+
+        // ═══ Admin Access ════════════════════════════════════════════
+
+        onAdminAdd: function () {
+            var oModel = this.getView().getModel("admin");
+            var sRaw   = (oModel.getProperty("/admins/newUser") || "").trim();
+            if (!sRaw) {
+                MessageToast.show("Select or type a user.");
+                return;
+            }
+
+            var sUserId = this._extractKey(sRaw);
+            var aAdmins = oModel.getProperty("/admins/list").slice();
+
+            var bDup = aAdmins.some(function (a) { return a.userId === sUserId; });
+            if (bDup) {
+                MessageToast.show("\"" + sUserId + "\" is already an administrator.");
+                return;
+            }
+
+            aAdmins.push({
+                userId: sUserId,
+                name: lookupUserName(sUserId) || "—"
+            });
+            oModel.setProperty("/admins/list", aAdmins);
+            oModel.setProperty("/admins/count", aAdmins.length);
+            oModel.setProperty("/admins/newUser", "");
+            MessageToast.show("Administrator added.");
+        },
+
+        onAdminRemove: function (oEvent) {
+            var oItem   = oEvent.getSource().getParent();
+            var sPath   = oItem.getBindingContext("admin").getPath();
+            var iIndex  = parseInt(sPath.split("/").pop(), 10);
+            var oModel  = this.getView().getModel("admin");
+            var aAdmins = oModel.getProperty("/admins/list");
+            var oTarget = aAdmins[iIndex];
+
+            // Don't allow removing the last admin — that would lock everyone out
+            if (aAdmins.length === 1) {
+                MessageBox.warning(
+                    "You cannot remove the last administrator. Add another admin before removing this one.",
+                    { title: "Cannot Remove" }
+                );
+                return;
+            }
 
             MessageBox.confirm(
-                "Remove scope mapping for \"" + aMappings[iIndex].sourceValue + "\" → \"" + aMappings[iIndex].appScope + "\"?",
+                "Remove \"" + (oTarget.name || oTarget.userId) + "\" as an administrator? They will lose access to Admin Settings.",
                 {
-                    title: "Confirm Delete",
+                    title: "Confirm Remove Admin",
                     onClose: function (oAction) {
                         if (oAction === MessageBox.Action.OK) {
-                            aMappings.splice(iIndex, 1);
-                            oModel.setProperty("/sm/mappings", aMappings);
-                            oModel.setProperty("/sm/count", aMappings.length);
-                            MessageToast.show("Scope mapping removed.");
+                            aAdmins.splice(iIndex, 1);
+                            oModel.setProperty("/admins/list", aAdmins);
+                            oModel.setProperty("/admins/count", aAdmins.length);
+                            MessageToast.show("Administrator removed.");
                         }
                     }
                 }
