@@ -1,0 +1,4 @@
+ID;authorId;authorName;authorRole;message;postedAt;request_ID
+d1b2c3d4-0001-4000-8000-000000000001;EMP001;Alice Chen;Requestor;Thanks for processing this so quickly. Could you clarify how the comparison group of 34 was selected? I'd like to understand whether tenure was factored in.;2025-01-23T10:15:00Z;a1b2c3d4-0001-4000-8000-000000000001
+d1b2c3d4-0002-4000-8000-000000000002;CLIENT_ADMIN;HR Admin;Responder;Hi Alice — good question. The comparison group included Senior Engineers in the US with 3-7 years of tenure at the company. Let me know if you'd like us to rerun with a wider tenure band.;2025-01-23T15:42:00Z;a1b2c3d4-0001-4000-8000-000000000001
+d1b2c3d4-0003-4000-8000-000000000003;EMP001;Alice Chen;Requestor;That makes sense — tenure band is appropriate for my level. No need to rerun. Appreciate the explanation.;2025-01-24T09:08:00Z;a1b2c3d4-0001-4000-8000-000000000001

@@ -1,0 +1,33 @@
+.rtiCommentRequestor {
+    background: #e3f2fd;
+    border-radius: 12px;
+    border-top-right-radius: 2px;
+    padding: 0.75rem 1rem;
+}
+
+.rtiCommentResponder {
+    background: #f4f6f8;
+    border-radius: 12px;
+    border-top-left-radius: 2px;
+    padding: 0.75rem 1rem;
+}
+
+/* Suppress horizontal scrollbars on nested panels in the request detail view */
+.sapMPanelContent {
+    overflow-x: hidden !important;
+}
+
+/* Ensure the narrative box and its children don't force horizontal overflow */
+.sapMPanel,
+.sapMPanelContent > .sapMVBox,
+.sapMPanelContent > .sapMFlexBox {
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* Force long words/strings inside narrative text to wrap */
+.sapMPanelContent .sapMText {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-width: 100%;
+}

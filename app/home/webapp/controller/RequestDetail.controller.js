@@ -4,11 +4,12 @@ sap.ui.define([
     "sap/m/Text",
     "sap/m/Title",
     "sap/m/Label",
+    "sap/m/HBox",
     "sap/m/ObjectNumber",
     "sap/m/VBox",
-    "sap/m/HBox",
-    "sap/m/MessageToast"
-], function (Controller, JSONModel, Text, Title, Label, ObjectNumber, VBox, HBox, MessageToast) {
+    "sap/m/MessageToast",
+    "sap/m/MessageBox"
+], function (Controller, JSONModel, Text, Title, Label, HBox, ObjectNumber, VBox, MessageToast, MessageBox) {
     "use strict";
 
     return Controller.extend("com.trusaic.rti.home.controller.RequestDetail", {
@@ -22,12 +23,27 @@ sap.ui.define([
             });
         },
 
+        formatDateTime: function (sDate) {
+            if (!sDate) { return ""; }
+            var oDate = new Date(sDate);
+            if (isNaN(oDate.getTime())) { return sDate; }
+            return oDate.toLocaleDateString("en-US", {
+                year: "numeric", month: "short", day: "numeric"
+            }) + " · " + oDate.toLocaleTimeString("en-US", {
+                hour: "numeric", minute: "2-digit"
+            });
+        },
+
         onInit: function () {
             var oViewModel = new JSONModel({
                 request: {},
                 statusHistory: [],
                 report: null,
-                reportParsed: null
+                reportParsed: null,
+                comments: [],
+                commentCount: 0,
+                newCommentText: "",
+                isPosting: false
             });
             this.getView().setModel(oViewModel, "detail");
         },
@@ -51,12 +67,13 @@ sap.ui.define([
             oViewModel.setProperty("/statusHistory", []);
             oViewModel.setProperty("/report", null);
             oViewModel.setProperty("/reportParsed", null);
+            oViewModel.setProperty("/comments", []);
+            oViewModel.setProperty("/commentCount", 0);
+            oViewModel.setProperty("/newCommentText", "");
 
-            // Clear narrative container before reload
+            // Clear any previously rendered narrative content
             var oNarrativeBox = this.byId("narrativeBox");
-            if (oNarrativeBox) {
-                oNarrativeBox.removeAllItems();
-            }
+            if (oNarrativeBox) { oNarrativeBox.removeAllItems(); }
 
             var sUrl = "/api/admin/AllRequests(" + sRequestId +
                        ")?$expand=statusHistory($orderby=changedAt asc),report,employee";
@@ -81,10 +98,77 @@ sap.ui.define([
                     if (data.report && data.report.narrative) {
                         this._renderNarrative(data.report.narrative);
                     }
+
+                    // Load comments only if status is Completed (matches panel visibility)
+                    if (data.status === "Completed") {
+                        this._loadComments(sRequestId);
+                    }
                 }.bind(this))
                 .catch(function (err) {
                     console.error("Failed to load request:", err);
                     MessageToast.show("Failed to load request details");
+                });
+        },
+
+        _loadComments: function (sRequestId) {
+            var oViewModel = this.getView().getModel("detail");
+            var sUrl = "/api/admin/AllComments?$filter=request_ID eq " + sRequestId +
+                       "&$orderby=postedAt asc";
+            fetch(sUrl)
+                .then(function (response) { return response.json(); })
+                .then(function (data) {
+                    var aComments = (data && data.value) ? data.value : [];
+                    oViewModel.setProperty("/comments", aComments);
+                    oViewModel.setProperty("/commentCount", aComments.length);
+                })
+                .catch(function (err) {
+                    console.error("Failed to load comments:", err);
+                    oViewModel.setProperty("/comments", []);
+                    oViewModel.setProperty("/commentCount", 0);
+                });
+        },
+
+        onPostComment: function () {
+            var oViewModel = this.getView().getModel("detail");
+            var sMessage = (oViewModel.getProperty("/newCommentText") || "").trim();
+            if (!sMessage) {
+                MessageToast.show("Please enter a comment before posting.");
+                return;
+            }
+            if (oViewModel.getProperty("/isPosting")) {
+                return;
+            }
+            oViewModel.setProperty("/isPosting", true);
+
+            var sRequestId = this._currentRequestId;
+            fetch("/api/employee/postComment", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    requestId: sRequestId,
+                    message: sMessage
+                })
+            })
+                .then(function (response) {
+                    if (!response.ok) {
+                        return response.text().then(function (text) {
+                            throw new Error(text || "Failed to post comment");
+                        });
+                    }
+                    return response.json();
+                })
+                .then(function () {
+                    oViewModel.setProperty("/newCommentText", "");
+                    MessageToast.show("Comment posted");
+                    // Refresh thread
+                    this._loadComments(sRequestId);
+                }.bind(this))
+                .catch(function (err) {
+                    console.error("Failed to post comment:", err);
+                    MessageBox.error("Failed to post comment. Please try again.");
+                })
+                .finally(function () {
+                    oViewModel.setProperty("/isPosting", false);
                 });
         },
 
@@ -145,65 +229,48 @@ sap.ui.define([
             });
         },
 
-        /**
-         * Render the narrative section. Supports two formats:
-         *   1) Structured JSON: { title, intro, sections: [{ heading, intro, paragraphs, bullets }] }
-         *   2) Plain text (legacy fallback)
-         */
         _renderNarrative: function (sNarrative) {
             var oBox = this.byId("narrativeBox");
             if (!oBox) { return; }
             oBox.removeAllItems();
 
-            var oNarrative = null;
-            if (typeof sNarrative === "string") {
-                var sTrimmed = sNarrative.trim();
-                if (sTrimmed.charAt(0) === "{" || sTrimmed.charAt(0) === "[") {
-                    try {
-                        oNarrative = JSON.parse(sTrimmed);
-                    } catch (e) {
-                        oNarrative = null;
-                    }
-                }
-            } else if (typeof sNarrative === "object" && sNarrative !== null) {
-                oNarrative = sNarrative;
-            }
-
-            // Fallback: render plain text
-            if (!oNarrative) {
+            // Try to parse as structured JSON; fall back to plain text
+            var oData;
+            try {
+                oData = JSON.parse(sNarrative);
+            } catch (e) {
                 oBox.addItem(new Text({ text: sNarrative, wrapping: true }));
                 return;
             }
 
-            // Top-level title
-            if (oNarrative.title) {
+            // Validate it looks like our narrative shape
+            if (!oData || typeof oData !== "object" ||
+                (!oData.title && !oData.intro && !oData.sections)) {
+                oBox.addItem(new Text({ text: sNarrative, wrapping: true }));
+                return;
+            }
+
+            if (oData.title) {
                 oBox.addItem(new Title({
-                    text: oNarrative.title,
-                    level: "H3"
+                    text: oData.title,
+                    level: "H4"
                 }).addStyleClass("sapUiSmallMarginBottom"));
             }
 
-            // Intro paragraph
-            if (oNarrative.intro) {
+            if (oData.intro) {
                 oBox.addItem(new Text({
-                    text: oNarrative.intro,
+                    text: oData.intro,
                     wrapping: true
-                }).addStyleClass("sapUiSmallMarginBottom"));
+                }).addStyleClass("sapUiMediumMarginBottom"));
             }
 
-            // Sections
-            if (Array.isArray(oNarrative.sections)) {
-                oNarrative.sections.forEach(function (oSection, iIndex) {
+            if (Array.isArray(oData.sections)) {
+                oData.sections.forEach(function (oSection) {
                     if (oSection.heading) {
-                        var oHeading = new Title({
-                            text: oSection.heading,
-                            level: "H4"
-                        }).addStyleClass("sapUiTinyMarginBottom");
-                        // Only add top margin for sections after the first
-                        if (iIndex > 0) {
-                            oHeading.addStyleClass("sapUiSmallMarginTop");
-                        }
-                        oBox.addItem(oHeading);
+                        oBox.addItem(new Title({
+                            text: oSection.heading.replace(/:$/, ""),
+                            level: "H5"
+                        }).addStyleClass("sapUiSmallMarginTop sapUiTinyMarginBottom"));
                     }
                     if (oSection.intro) {
                         oBox.addItem(new Text({
@@ -221,12 +288,15 @@ sap.ui.define([
                     }
                     if (Array.isArray(oSection.bullets) && oSection.bullets.length > 0) {
                         oSection.bullets.forEach(function (sBullet) {
-                            oBox.addItem(new HBox({
+                            var oBulletRow = new HBox({
+                                alignItems: "Start",
                                 items: [
-                                    new Text({ text: "•" }).addStyleClass("sapUiTinyMarginEnd"),
+                                    new Text({ text: "•" })
+                                        .addStyleClass("sapUiTinyMarginEnd"),
                                     new Text({ text: sBullet, wrapping: true })
                                 ]
-                            }));
+                            }).addStyleClass("sapUiTinyMarginBegin sapUiTinyMarginBottom");
+                            oBox.addItem(oBulletRow);
                         });
                     }
                 });

@@ -3,6 +3,7 @@
     xmlns="sap.m"
     xmlns:f="sap.f"
     xmlns:card="sap.f.cards"
+    xmlns:core="sap.ui.core"
     xmlns:layout="sap.ui.layout"
     xmlns:form="sap.ui.layout.form"
     controllerName="com.trusaic.rti.home.controller.RequestDetail"
@@ -126,8 +127,8 @@
                                   visible="{= !!${detail>/reportParsed/data/comparisonGroupSize}}"
                                   class="sapUiSmallMarginBottom"/>
                             <Panel headerText="Narrative"
-                                   visible="{= !!${detail>/report/narrative}}"
-                                   class="sapUiSmallMarginBottom">
+                                visible="{= !!${detail>/report/narrative}}"
+                                class="sapUiSmallMarginBottom">
                                 <content>
                                     <VBox id="narrativeBox" class="sapUiSmallMargin" width="100%"/>
                                 </content>
@@ -137,6 +138,93 @@
                                   target="_blank"
                                   visible="{= !!${detail>/report/reportFileUrl}}"
                                   class="sapUiSmallMarginTop"/>
+                        </layout:VerticalLayout>
+                    </content>
+                </Panel>
+
+                <!-- ============================================================ -->
+                <!-- Discussion Panel — visible on completed reports               -->
+                <!-- ============================================================ -->
+                <Panel headerText="Discussion"
+                       class="sapUiSmallMarginBottom"
+                       visible="{= ${detail>/request/status} === 'Completed' &amp;&amp; !!${detail>/report}}">
+                    <headerToolbar>
+                        <Toolbar>
+                            <Title text="Discussion"/>
+                            <ToolbarSpacer/>
+                            <ObjectStatus
+                                text="{detail>/commentCount} {= ${detail>/commentCount} === 1 ? 'comment' : 'comments'}"
+                                state="Information"/>
+                        </Toolbar>
+                    </headerToolbar>
+                    <content>
+                        <layout:VerticalLayout class="sapUiSmallMargin" width="100%">
+
+                            <!-- Empty state -->
+                            <VBox alignItems="Center"
+                                  visible="{= ${detail>/commentCount} === 0}"
+                                  class="sapUiMediumMargin">
+                                <core:Icon src="sap-icon://discussion"
+                                           size="2.5rem"
+                                           color="#999"
+                                           class="sapUiSmallMarginBottom"/>
+                                <Text text="No comments yet. Start the conversation about this report."
+                                      textAlign="Center"/>
+                            </VBox>
+
+                            <!-- Conversation thread -->
+                            <List id="commentsList"
+                                  items="{detail>/comments}"
+                                  showSeparators="None"
+                                  visible="{= ${detail>/commentCount} > 0}"
+                                  backgroundDesign="Transparent">
+                                <CustomListItem class="sapUiTinyMarginBottom">
+                                    <HBox justifyContent="{= ${detail>authorRole} === 'Requestor' ? 'End' : 'Start'}"
+                                          width="100%"
+                                          class="sapUiTinyMarginBottom sapUiTinyMarginTop">
+                                        <VBox width="80%"
+                                              class="{= ${detail>authorRole} === 'Requestor' ? 'rtiCommentRequestor' : 'rtiCommentResponder'}">
+                                            <HBox alignItems="Center" class="sapUiTinyMarginBottom">
+                                                <core:Icon src="{= ${detail>authorRole} === 'Requestor' ? 'sap-icon://employee' : 'sap-icon://customer'}"
+                                                           size="1rem"
+                                                           class="sapUiTinyMarginEnd"/>
+                                                <Text text="{detail>authorName}"
+                                                      class="sapUiTinyMarginEnd"/>
+                                                <Text text="·" class="sapUiTinyMarginEnd"/>
+                                                <Text text="{parts: ['detail>postedAt'], formatter: '.formatDateTime'}"/>
+                                            </HBox>
+                                            <Text text="{detail>message}" wrapping="true"/>
+                                        </VBox>
+                                    </HBox>
+                                </CustomListItem>
+                            </List>
+
+                            <!-- Compose -->
+                            <Panel class="sapUiSmallMarginTop" backgroundDesign="Transparent">
+                                <content>
+                                    <VBox class="sapUiSmallMargin">
+                                        <Label text="Add a comment"
+                                               labelFor="newCommentInput"
+                                               class="sapUiTinyMarginBottom"/>
+                                        <TextArea id="newCommentInput"
+                                                  value="{detail>/newCommentText}"
+                                                  placeholder="Type your comment here. The HR Admin team will see this."
+                                                  rows="3"
+                                                  growing="true"
+                                                  growingMaxLines="8"
+                                                  width="100%"
+                                                  maxLength="5000"/>
+                                        <HBox justifyContent="End" class="sapUiSmallMarginTop">
+                                            <Button text="Post Comment"
+                                                    type="Emphasized"
+                                                    icon="sap-icon://paper-plane"
+                                                    press=".onPostComment"
+                                                    enabled="{= !!${detail>/newCommentText} &amp;&amp; ${detail>/newCommentText}.length > 0}"/>
+                                        </HBox>
+                                    </VBox>
+                                </content>
+                            </Panel>
+
                         </layout:VerticalLayout>
                     </content>
                 </Panel>

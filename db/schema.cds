@@ -2,65 +2,58 @@ namespace com.trusaic.rti;
 
 using { cuid, managed } from '@sap/cds/common';
 
-/**
- * Users — role-based access, SSO mapping, employee context
- */
 entity Users {
-    key employeeId : String(100);       // From SSO/IDP
+    key employeeId : String(100);
     name           : String(255);
     email          : String(255);
     role           : String(20) enum { Employee; Approver; Admin };
-    department     : String(255);       // For Admin filters, V2 approval routing
-    location       : String(255);       // Same
-
-    // Associations
+    department     : String(255);
+    location       : String(255);
     requests       : Association to many Requests on requests.employee = $self;
     approvals      : Association to many Requests on approvals.approver = $self;
 }
 
-/**
- * Requests — central workflow table, every screen reads from this
- */
 entity Requests : cuid, managed {
-    requestType                : String(100);   // e.g. "Individual Pay Gap", "Pay Level Comparison"
-    comparisonGroup            : String(500);   // Parameters dependent on request type
-    justification              : String(5000);  // Optional
+    requestType                : String(100);
+    comparisonGroup            : String(500);
+    justification              : String(5000);
     status                     : String(20) enum { Submitted; UnderReview; Approved; Denied; Completed };
     submittedAt                : Timestamp;
     lastUpdatedAt              : Timestamp;
     approvedAt                 : Timestamp;
     deniedAt                   : Timestamp;
     denialReason               : String(5000);
-    payparityValidationSummary : LargeString;   // JSON from iFlow 2
+    payparityValidationSummary : LargeString;
     completedAt                : Timestamp;
-
-    // Associations
     employee       : Association to Users;
     approver       : Association to Users;
     statusHistory  : Composition of many StatusHistory on statusHistory.request = $self;
     report         : Composition of one Reports on report.request = $self;
+    comments       : Composition of many ReportComments on comments.request = $self;
 }
 
-/**
- * StatusHistory — timeline on Screen 4, SLA tracking for V2
- */
 entity StatusHistory : cuid, managed {
     request   : Association to Requests;
-    status    : String(20);             // Status at this point in time
+    status    : String(20);
     changedAt : Timestamp;
-    changedBy : String(100);            // System or user ID
-    note      : String(5000);           // e.g. denial reason, system note
+    changedBy : String(100);
+    note      : String(5000);
 }
 
-/**
- * Reports — completed RTI report data, 1:1 with Requests
- * Structure varies per PayParity project config, stored as self-describing JSON snapshot
- */
 entity Reports : cuid, managed {
     request            : Association to Requests;
-    payparityProjectId : String(100);   // Which PayParity project config produced this
+    payparityProjectId : String(100);
     generatedAt        : Timestamp;
-    reportData         : LargeString;   // Full JSON payload with embedded schema + data
-    narrative          : LargeString;   // Pulled out for display convenience
-    reportFileUrl      : String(1000);  // PDF download link
+    reportData         : LargeString;
+    narrative          : LargeString;
+    reportFileUrl      : String(1000);
+}
+
+entity ReportComments : cuid, managed {
+    request    : Association to Requests;
+    authorId   : String(100);
+    authorName : String(255);
+    authorRole : String(20) enum { Requestor; Responder };
+    message    : String(5000);
+    postedAt   : Timestamp;
 }
