@@ -2,6 +2,8 @@
     xmlns:mvc="sap.ui.core.mvc"
     xmlns="sap.m"
     xmlns:core="sap.ui.core"
+    xmlns:f="sap.f"
+    xmlns:card="sap.f.cards"
     xmlns:layout="sap.ui.layout"
     controllerName="com.trusaic.rti.home.controller.AdminSettings"
     displayBlock="true">
@@ -22,122 +24,221 @@
 
                             <!-- Add Project Mapping -->
                             <Panel headerText="Add Project Mapping" class="sapUiSmallMarginBottom">
+                                <headerToolbar>
+                                    <Toolbar>
+                                        <Title text="Add Project Mapping"/>
+                                        <ToolbarSpacer/>
+                                        <!-- Reset / change-mode link, only visible after a mode has been chosen -->
+                                        <Button text="Start Over"
+                                                icon="sap-icon://undo"
+                                                type="Transparent"
+                                                press=".onPmModeReset"
+                                                visible="{= ${admin>/pm/mode} !== ''}"/>
+                                    </Toolbar>
+                                </headerToolbar>
                                 <content>
                                     <layout:VerticalLayout class="sapUiSmallMargin" width="100%">
 
-                                        <!-- Project selection -->
-                                        <HBox alignItems="End" wrap="Wrap" class="sapUiSmallMarginBottom">
-                                            <VBox class="sapUiSmallMarginEnd">
-                                                <Label text="Trusaic Project" required="true"/>
-                                                <ComboBox id="pmProject"
-                                                          value="{admin>/pm/newProject}"
-                                                          placeholder="Type or select a project..."
-                                                          width="300px"
-                                                          items="{admin>/suggestions/projects}">
-                                                    <core:ListItem key="{admin>key}" text="{admin>text}"/>
-                                                </ComboBox>
-                                            </VBox>
-                                        </HBox>
+                                        <!-- ═══════════════════════════════════════════════ -->
+                                        <!-- STEP 1: Mode chooser (default state)             -->
+                                        <!-- ═══════════════════════════════════════════════ -->
+                                        <VBox visible="{= ${admin>/pm/mode} === ''}"
+                                              class="sapUiSmallMargin">
+                                            <HBox wrap="Wrap">
+                                                <f:Card class="sapUiSmallMarginEnd sapUiSmallMarginBottom" width="300px">
+                                                    <f:header>
+                                                        <card:Header
+                                                            title="From Scratch"
+                                                            subtitle="Build a new mapping"
+                                                            iconSrc="sap-icon://add-document"/>
+                                                    </f:header>
+                                                    <f:content>
+                                                        <VBox class="sapUiSmallMargin">
+                                                            <Button text="Start From Scratch"
+                                                                    type="Emphasized"
+                                                                    icon="sap-icon://create"
+                                                                    press=".onPmModeFromScratch"/>
+                                                        </VBox>
+                                                    </f:content>
+                                                </f:Card>
 
-                                        <!-- Requestor entry -->
-                                        <HBox alignItems="End" wrap="Wrap" class="sapUiSmallMarginBottom">
-                                            <VBox class="sapUiSmallMarginEnd">
-                                                <Label text="Group Type"/>
-                                                <Select id="pmRequestorType"
-                                                        selectedKey="{admin>/pm/newRequestorType}"
-                                                        change=".onRequestorTypeChange"
-                                                        width="180px">
-                                                    <items>
-                                                        <core:Item key="SFDynamic" text="SF Dynamic Group"/>
-                                                        <core:Item key="SFStatic" text="SF Static Group"/>
-                                                        <core:Item key="IASGroup" text="IAS User Group"/>
-                                                        <core:Item key="RoleCollection" text="BTP Role Collection"/>
-                                                        <core:Item key="Individual" text="Individual User"/>
-                                                    </items>
-                                                </Select>
-                                            </VBox>
-                                            <VBox class="sapUiSmallMarginEnd">
-                                                <Label text="Requestor"/>
-                                                <ComboBox id="pmRequestorValue"
-                                                          value="{admin>/pm/newRequestorValue}"
-                                                          placeholder="Type or select..."
-                                                          width="260px"
-                                                          items="{admin>/pm/filteredRequestorSuggestions}">
-                                                    <core:ListItem key="{admin>key}" text="{admin>text}"/>
-                                                </ComboBox>
-                                            </VBox>
-                                            <Button text="Add Requestor"
-                                                    icon="sap-icon://add"
-                                                    type="Default"
-                                                    press=".onPmAddRequestor"
-                                                    class="sapUiSmallMarginBottom"/>
-                                        </HBox>
-
-                                        <!-- Staged requestors -->
-                                        <VBox visible="{= ${admin>/pm/pendingRequestors}.length > 0}"
-                                              class="sapUiSmallMarginBottom">
-                                            <Label text="Requestors added:" class="sapUiTinyMarginBottom"/>
-                                            <HBox wrap="Wrap" alignItems="Center"
-                                                  items="{admin>/pm/pendingRequestors}">
-                                                <Token text="{admin>display}"
-                                                       editable="true"
-                                                       delete=".onPmRemovePendingRequestor"
-                                                       class="sapUiTinyMarginEnd sapUiTinyMarginBottom"/>
+                                                <f:Card class="sapUiSmallMarginEnd sapUiSmallMarginBottom" width="300px">
+                                                    <f:header>
+                                                        <card:Header
+                                                            title="Copy Existing Mapping"
+                                                            subtitle="Reuse requestors and approvers"
+                                                            iconSrc="sap-icon://duplicate"/>
+                                                    </f:header>
+                                                    <f:content>
+                                                        <VBox class="sapUiSmallMargin">
+                                                            <Button text="Copy Existing Mapping"
+                                                                    type="Default"
+                                                                    icon="sap-icon://copy"
+                                                                    press=".onPmModeCopy"/>
+                                                        </VBox>
+                                                    </f:content>
+                                                </f:Card>
                                             </HBox>
                                         </VBox>
 
-                                        <!-- Approver entry -->
-                                        <HBox alignItems="End" wrap="Wrap" class="sapUiSmallMarginBottom">
-                                            <VBox class="sapUiSmallMarginEnd">
-                                                <Label text="Group Type"/>
-                                                <Select id="pmApproverType"
-                                                        selectedKey="{admin>/pm/newApproverType}"
-                                                        change=".onApproverTypeChange"
-                                                        width="180px">
-                                                    <items>
-                                                        <core:Item key="SFDynamic" text="SF Dynamic Group"/>
-                                                        <core:Item key="SFStatic" text="SF Static Group"/>
-                                                        <core:Item key="IASGroup" text="IAS User Group"/>
-                                                        <core:Item key="RoleCollection" text="BTP Role Collection"/>
-                                                        <core:Item key="Individual" text="Individual User"/>
-                                                    </items>
-                                                </Select>
-                                            </VBox>
-                                            <VBox class="sapUiSmallMarginEnd">
-                                                <Label text="Approver"/>
-                                                <ComboBox id="pmApproverValue"
-                                                          value="{admin>/pm/newApproverValue}"
-                                                          placeholder="Type or select..."
-                                                          width="260px"
-                                                          items="{admin>/pm/filteredApproverSuggestions}">
-                                                    <core:ListItem key="{admin>key}" text="{admin>text}"/>
-                                                </ComboBox>
-                                            </VBox>
-                                            <Button text="Add Approver"
-                                                    icon="sap-icon://add"
-                                                    type="Default"
-                                                    press=".onPmAddApprover"
-                                                    class="sapUiSmallMarginBottom"/>
-                                        </HBox>
-
-                                        <!-- Staged approvers -->
-                                        <VBox visible="{= ${admin>/pm/pendingApprovers}.length > 0}"
+                                        <!-- ═══════════════════════════════════════════════ -->
+                                        <!-- STEP 2 (Copy mode only): Pick source mapping     -->
+                                        <!-- ═══════════════════════════════════════════════ -->
+                                        <VBox visible="{= ${admin>/pm/mode} === 'copy'}"
                                               class="sapUiSmallMarginBottom">
-                                            <Label text="Approvers added:" class="sapUiTinyMarginBottom"/>
-                                            <HBox wrap="Wrap" alignItems="Center"
-                                                  items="{admin>/pm/pendingApprovers}">
-                                                <Token text="{admin>display}"
-                                                       editable="true"
-                                                       delete=".onPmRemovePendingApprover"
-                                                       class="sapUiTinyMarginEnd sapUiTinyMarginBottom"/>
-                                            </HBox>
+                                            <Label text="Copy from existing mapping" required="true"/>
+                                            <ComboBox id="pmCopySource"
+                                                      value="{admin>/pm/copySourceProject}"
+                                                      placeholder="Select an existing project mapping..."
+                                                      width="400px"
+                                                      change=".onPmCopySourceChange"
+                                                      selectionChange=".onPmCopySourceChange"
+                                                      items="{admin>/pm/copySourceSuggestions}">
+                                                <core:ListItem key="{admin>key}" text="{admin>text}"/>
+                                            </ComboBox>
                                         </VBox>
 
-                                        <Button text="Save Project Mapping"
-                                                type="Emphasized"
-                                                icon="sap-icon://save"
-                                                press=".onPmAdd"
-                                                class="sapUiSmallMarginTop"/>
+                                        <!-- ═══════════════════════════════════════════════ -->
+                                        <!-- STEP 3: Project selector + group editors         -->
+                                        <!-- Visible when:                                    -->
+                                        <!--   - mode = scratch, OR                           -->
+                                        <!--   - mode = copy AND copy source has been picked  -->
+                                        <!-- ═══════════════════════════════════════════════ -->
+                                        <VBox visible="{= ${admin>/pm/mode} === 'scratch' || (${admin>/pm/mode} === 'copy' &amp;&amp; !!${admin>/pm/copySourceProject})}">
+
+                                            <!-- Project selection -->
+                                            <HBox alignItems="End" wrap="Wrap" class="sapUiSmallMarginBottom">
+                                                <VBox class="sapUiSmallMarginEnd">
+                                                    <Label text="Trusaic Project" required="true"/>
+                                                    <ComboBox id="pmProject"
+                                                              value="{admin>/pm/newProject}"
+                                                              placeholder="Type or select a project..."
+                                                              width="300px"
+                                                              items="{admin>/pm/filteredProjectSuggestions}">
+                                                        <core:ListItem key="{admin>key}" text="{admin>text}"/>
+                                                    </ComboBox>
+                                                </VBox>
+                                            </HBox>
+
+                                            <!-- Group editors are only revealed once a project is selected (scratch),
+                                                 OR immediately in copy mode (since they're prefilled). -->
+                                            <VBox visible="{= !!${admin>/pm/newProject} || ${admin>/pm/mode} === 'copy'}">
+
+                                                <!-- ═══ Requestors panel ═══ -->
+                                                <Panel headerText="Requestors" class="sapUiSmallMarginBottom">
+                                                    <content>
+                                                        <layout:VerticalLayout class="sapUiSmallMargin" width="100%">
+
+                                                            <!-- Existing/staged requestors as removable tokens -->
+                                                            <HBox visible="{= ${admin>/pm/pendingRequestors}.length > 0}"
+                                                                  wrap="Wrap" alignItems="Center"
+                                                                  class="sapUiSmallMarginBottom"
+                                                                  items="{admin>/pm/pendingRequestors}">
+                                                                <Token text="{admin>display}"
+                                                                       editable="true"
+                                                                       delete=".onPmRemovePendingRequestor"
+                                                                       class="sapUiTinyMarginEnd sapUiTinyMarginBottom"/>
+                                                            </HBox>
+
+                                                            <Text text="No requestors added yet."
+                                                                  visible="{= ${admin>/pm/pendingRequestors}.length === 0}"
+                                                                  class="sapUiSmallMarginBottom"/>
+
+                                                            <!-- Add new requestor controls -->
+                                                            <HBox alignItems="End" wrap="Wrap">
+                                                                <VBox class="sapUiSmallMarginEnd">
+                                                                    <Label text="Group Type"/>
+                                                                    <Select id="pmRequestorType"
+                                                                            selectedKey="{admin>/pm/newRequestorType}"
+                                                                            change=".onRequestorTypeChange"
+                                                                            width="180px">
+                                                                        <items>
+                                                                            <core:Item key="SFDynamic" text="SF Dynamic Group"/>
+                                                                            <core:Item key="SFStatic" text="SF Static Group"/>
+                                                                            <core:Item key="IASGroup" text="IAS User Group"/>
+                                                                            <core:Item key="RoleCollection" text="BTP Role Collection"/>
+                                                                            <core:Item key="Individual" text="Individual User"/>
+                                                                        </items>
+                                                                    </Select>
+                                                                </VBox>
+                                                                <VBox class="sapUiSmallMarginEnd">
+                                                                    <Label text="Requestor"/>
+                                                                    <ComboBox id="pmRequestorValue"
+                                                                              value="{admin>/pm/newRequestorValue}"
+                                                                              placeholder="Type or select..."
+                                                                              width="260px"
+                                                                              selectionChange=".onPmRequestorSelectionChange"
+                                                                              items="{admin>/pm/filteredRequestorSuggestions}">
+                                                                        <core:ListItem key="{admin>key}" text="{admin>text}"/>
+                                                                    </ComboBox>
+                                                                </VBox>
+                                                            </HBox>
+                                                        </layout:VerticalLayout>
+                                                    </content>
+                                                </Panel>
+
+                                                <!-- ═══ Approvers panel ═══ -->
+                                                <Panel headerText="Approvers" class="sapUiSmallMarginBottom">
+                                                    <content>
+                                                        <layout:VerticalLayout class="sapUiSmallMargin" width="100%">
+
+                                                            <!-- Existing/staged approvers as removable tokens -->
+                                                            <HBox visible="{= ${admin>/pm/pendingApprovers}.length > 0}"
+                                                                  wrap="Wrap" alignItems="Center"
+                                                                  class="sapUiSmallMarginBottom"
+                                                                  items="{admin>/pm/pendingApprovers}">
+                                                                <Token text="{admin>display}"
+                                                                       editable="true"
+                                                                       delete=".onPmRemovePendingApprover"
+                                                                       class="sapUiTinyMarginEnd sapUiTinyMarginBottom"/>
+                                                            </HBox>
+
+                                                            <Text text="No approvers added yet."
+                                                                  visible="{= ${admin>/pm/pendingApprovers}.length === 0}"
+                                                                  class="sapUiSmallMarginBottom"/>
+
+                                                            <!-- Add new approver controls -->
+                                                            <HBox alignItems="End" wrap="Wrap">
+                                                                <VBox class="sapUiSmallMarginEnd">
+                                                                    <Label text="Group Type"/>
+                                                                    <Select id="pmApproverType"
+                                                                            selectedKey="{admin>/pm/newApproverType}"
+                                                                            change=".onApproverTypeChange"
+                                                                            width="180px">
+                                                                        <items>
+                                                                            <core:Item key="SFDynamic" text="SF Dynamic Group"/>
+                                                                            <core:Item key="SFStatic" text="SF Static Group"/>
+                                                                            <core:Item key="IASGroup" text="IAS User Group"/>
+                                                                            <core:Item key="RoleCollection" text="BTP Role Collection"/>
+                                                                            <core:Item key="Individual" text="Individual User"/>
+                                                                        </items>
+                                                                    </Select>
+                                                                </VBox>
+                                                                <VBox class="sapUiSmallMarginEnd">
+                                                                    <Label text="Approver"/>
+                                                                    <ComboBox id="pmApproverValue"
+                                                                              value="{admin>/pm/newApproverValue}"
+                                                                              placeholder="Type or select..."
+                                                                              width="260px"
+                                                                              selectionChange=".onPmApproverSelectionChange"
+                                                                              items="{admin>/pm/filteredApproverSuggestions}">
+                                                                        <core:ListItem key="{admin>key}" text="{admin>text}"/>
+                                                                    </ComboBox>
+                                                                </VBox>
+                                                            </HBox>
+                                                        </layout:VerticalLayout>
+                                                    </content>
+                                                </Panel>
+
+                                                <Button text="Save Project Mapping"
+                                                        type="Emphasized"
+                                                        icon="sap-icon://save"
+                                                        press=".onPmAdd"
+                                                        class="sapUiSmallMarginTop"/>
+                                            </VBox>
+
+                                        </VBox>
+
                                     </layout:VerticalLayout>
                                 </content>
                             </Panel>
@@ -298,14 +399,11 @@
                                             <ComboBox value="{admin>/pmEdit/newRequestorValue}"
                                                       placeholder="Type or select..."
                                                       width="240px"
+                                                      selectionChange=".onPmEditRequestorSelectionChange"
                                                       items="{admin>/pmEdit/filteredRequestorSuggestions}">
                                                 <core:ListItem key="{admin>key}" text="{admin>text}"/>
                                             </ComboBox>
                                         </VBox>
-                                        <Button text="Add"
-                                                icon="sap-icon://add"
-                                                press=".onPmEditAddRequestor"
-                                                class="sapUiSmallMarginBottom"/>
                                     </HBox>
                                 </layout:VerticalLayout>
                             </content>
@@ -352,14 +450,11 @@
                                             <ComboBox value="{admin>/pmEdit/newApproverValue}"
                                                       placeholder="Type or select..."
                                                       width="240px"
+                                                      selectionChange=".onPmEditApproverSelectionChange"
                                                       items="{admin>/pmEdit/filteredApproverSuggestions}">
                                                 <core:ListItem key="{admin>key}" text="{admin>text}"/>
                                             </ComboBox>
                                         </VBox>
-                                        <Button text="Add"
-                                                icon="sap-icon://add"
-                                                press=".onPmEditAddApprover"
-                                                class="sapUiSmallMarginBottom"/>
                                     </HBox>
                                 </layout:VerticalLayout>
                             </content>

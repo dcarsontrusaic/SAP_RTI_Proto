@@ -155,12 +155,34 @@ sap.ui.define([
                 { userId: "ADM001", name: "Fatima Al-Rashid" }
             ];
 
+            // Pre-compute the "copy source" suggestions list for the ComboBox
+            var aCopySourceSuggestions = aProjectMappings.map(function (m) {
+                return {
+                    key: m.project,
+                    text: m.project + " — " + m.requestors.length + " requestor(s), " +
+                          m.approvers.length + " approver(s)"
+                };
+            });
+
+            // Pre-compute the available (unmapped) project list for the project ComboBox
+            var aMappedProjectKeys = aProjectMappings.map(function (m) { return m.project; });
+            var aAvailableProjectSuggestions = SUGGESTIONS.projects.filter(function (p) {
+                return aMappedProjectKeys.indexOf(p.key) === -1;
+            });
+
             var oModel = new JSONModel({
                 suggestions: {
-                    projects: SUGGESTIONS.projects,
                     individuals: SUGGESTIONS.Individual
                 },
                 pm: {
+                    // Mode controls which UI is shown: "" (chooser), "scratch", or "copy"
+                    mode: "",
+                    copySourceProject: "",
+                    copySourceSuggestions: aCopySourceSuggestions,
+                    // Available projects (excludes those already mapped) — refreshed
+                    // whenever mappings change.
+                    filteredProjectSuggestions: aAvailableProjectSuggestions,
+                    // Form fields
                     newProject: "",
                     newRequestorType: "SFDynamic",
                     newRequestorValue: "",
@@ -194,46 +216,114 @@ sap.ui.define([
             this.getView().setModel(oModel, "admin");
         },
 
+        // ═══ Mode selection (From Scratch / Copy Existing) ═══════════
+
+        onPmModeFromScratch: function () {
+            var oModel = this.getView().getModel("admin");
+            this._resetPmForm();
+            oModel.setProperty("/pm/mode", "scratch");
+        },
+
+        onPmModeCopy: function () {
+            var oModel = this.getView().getModel("admin");
+            this._resetPmForm();
+            oModel.setProperty("/pm/mode", "copy");
+        },
+
+        onPmModeReset: function () {
+            this._resetPmForm();
+        },
+
+        _resetPmForm: function () {
+            var oModel = this.getView().getModel("admin");
+            oModel.setProperty("/pm/mode", "");
+            oModel.setProperty("/pm/copySourceProject", "");
+            oModel.setProperty("/pm/newProject", "");
+            oModel.setProperty("/pm/pendingRequestors", []);
+            oModel.setProperty("/pm/pendingApprovers", []);
+            oModel.setProperty("/pm/newRequestorType", "SFDynamic");
+            oModel.setProperty("/pm/newRequestorValue", "");
+            oModel.setProperty("/pm/newApproverType", "SFDynamic");
+            oModel.setProperty("/pm/newApproverValue", "");
+            oModel.setProperty("/pm/filteredRequestorSuggestions", SUGGESTIONS.SFDynamic);
+            oModel.setProperty("/pm/filteredApproverSuggestions", SUGGESTIONS.SFDynamic);
+        },
+
+        /**
+         * Triggered when the user picks an existing project to copy from.
+         * Pre-populates the requestor and approver staging arrays from the source.
+         */
+        onPmCopySourceChange: function () {
+            var oModel = this.getView().getModel("admin");
+            var sRaw = (oModel.getProperty("/pm/copySourceProject") || "").trim();
+            var sKey = this._extractKey(sRaw);
+            if (!sKey) {
+                oModel.setProperty("/pm/pendingRequestors", []);
+                oModel.setProperty("/pm/pendingApprovers", []);
+                return;
+            }
+
+            var aMappings = oModel.getProperty("/pm/mappings") || [];
+            var oSource = aMappings.find(function (m) { return m.project === sKey; });
+            if (!oSource) {
+                oModel.setProperty("/pm/pendingRequestors", []);
+                oModel.setProperty("/pm/pendingApprovers", []);
+                return;
+            }
+
+            // Pre-populate requestors and approvers from source mapping
+            oModel.setProperty("/pm/pendingRequestors", withDisplay(oSource.requestors));
+            oModel.setProperty("/pm/pendingApprovers", withDisplay(oSource.approvers));
+            // Project field stays empty — user picks the new target project
+            oModel.setProperty("/pm/newProject", "");
+            // Filter the dropdowns so prefilled items don't reappear
+            this._recomputeAvailableGroupOptions("pm");
+        },
+
         // ═══ Suggestion filtering on type change ═════════════════════
 
         onRequestorTypeChange: function () {
             var oModel = this.getView().getModel("admin");
-            var sType  = oModel.getProperty("/pm/newRequestorType");
-            oModel.setProperty("/pm/filteredRequestorSuggestions", SUGGESTIONS[sType] || []);
             oModel.setProperty("/pm/newRequestorValue", "");
+            this._recomputeAvailableGroupOptions("pm");
         },
 
         onApproverTypeChange: function () {
             var oModel = this.getView().getModel("admin");
-            var sType  = oModel.getProperty("/pm/newApproverType");
-            oModel.setProperty("/pm/filteredApproverSuggestions", SUGGESTIONS[sType] || []);
             oModel.setProperty("/pm/newApproverValue", "");
+            this._recomputeAvailableGroupOptions("pm");
         },
 
         // ═══ Requestor / Approver staging ════════════════════════════
+        //
+        // Auto-add: when the user picks an item from the dropdown,
+        // selectionChange fires with the chosen item, we stage it
+        // immediately, and reset the input. No "Add" button needed.
 
-        onPmAddRequestor: function () {
+        onPmRequestorSelectionChange: function (oEvent) {
             var oModel = this.getView().getModel("admin");
-            var sType  = oModel.getProperty("/pm/newRequestorType");
-            var sVal   = (oModel.getProperty("/pm/newRequestorValue") || "").trim();
-            if (!sVal) {
-                MessageToast.show("Select or type a requestor group.");
-                return;
-            }
-            var sKey = this._extractKey(sVal);
+            var oItem  = oEvent.getParameter("selectedItem");
+            if (!oItem) { return; }
+            var sKey  = oItem.getKey();
+            var sType = oModel.getProperty("/pm/newRequestorType");
+
             var arr  = oModel.getProperty("/pm/pendingRequestors").slice();
             var bDup = arr.some(function (r) { return r.type === sType && r.value === sKey; });
             if (bDup) {
                 MessageToast.show("\"" + sKey + "\" is already added.");
-                return;
+            } else {
+                arr.push({
+                    type: sType,
+                    value: sKey,
+                    display: "[" + typeLabel(sType) + "] " + sKey
+                });
+                oModel.setProperty("/pm/pendingRequestors", arr);
             }
-            arr.push({
-                type: sType,
-                value: sKey,
-                display: "[" + typeLabel(sType) + "] " + sKey
-            });
-            oModel.setProperty("/pm/pendingRequestors", arr);
+            // Clear the selection so the user can pick another value of the same type
             oModel.setProperty("/pm/newRequestorValue", "");
+            oEvent.getSource().setSelectedKey("");
+            // Refresh available list so the just-added item drops out
+            this._recomputeAvailableGroupOptions("pm");
         },
 
         onPmRemovePendingRequestor: function (oEvent) {
@@ -246,30 +336,32 @@ sap.ui.define([
             var arr      = oModel.getProperty("/pm/pendingRequestors").slice();
             arr.splice(iIndex, 1);
             oModel.setProperty("/pm/pendingRequestors", arr);
+            this._recomputeAvailableGroupOptions("pm");
         },
 
-        onPmAddApprover: function () {
+        onPmApproverSelectionChange: function (oEvent) {
             var oModel = this.getView().getModel("admin");
-            var sType  = oModel.getProperty("/pm/newApproverType");
-            var sVal   = (oModel.getProperty("/pm/newApproverValue") || "").trim();
-            if (!sVal) {
-                MessageToast.show("Select or type an approver group.");
-                return;
-            }
-            var sKey = this._extractKey(sVal);
+            var oItem  = oEvent.getParameter("selectedItem");
+            if (!oItem) { return; }
+            var sKey  = oItem.getKey();
+            var sType = oModel.getProperty("/pm/newApproverType");
+
             var arr  = oModel.getProperty("/pm/pendingApprovers").slice();
             var bDup = arr.some(function (a) { return a.type === sType && a.value === sKey; });
             if (bDup) {
                 MessageToast.show("\"" + sKey + "\" is already added.");
-                return;
+            } else {
+                arr.push({
+                    type: sType,
+                    value: sKey,
+                    display: "[" + typeLabel(sType) + "] " + sKey
+                });
+                oModel.setProperty("/pm/pendingApprovers", arr);
             }
-            arr.push({
-                type: sType,
-                value: sKey,
-                display: "[" + typeLabel(sType) + "] " + sKey
-            });
-            oModel.setProperty("/pm/pendingApprovers", arr);
+            // Clear the selection so the user can pick another value of the same type
             oModel.setProperty("/pm/newApproverValue", "");
+            oEvent.getSource().setSelectedKey("");
+            this._recomputeAvailableGroupOptions("pm");
         },
 
         onPmRemovePendingApprover: function (oEvent) {
@@ -282,11 +374,70 @@ sap.ui.define([
             var arr      = oModel.getProperty("/pm/pendingApprovers").slice();
             arr.splice(iIndex, 1);
             oModel.setProperty("/pm/pendingApprovers", arr);
+            this._recomputeAvailableGroupOptions("pm");
         },
 
         _extractKey: function (sVal) {
             var idx = sVal.indexOf(" — ");
             return idx > -1 ? sVal.substring(0, idx).trim() : sVal.trim();
+        },
+
+        /**
+         * Recompute the available group options for the given scope ("pm" or "pmEdit"),
+         * filtering out items already staged as tokens.
+         *
+         * Filter is per-type: an item already staged as type X is removed from the
+         * type-X dropdown but remains visible if the user switches to a different type.
+         */
+        _recomputeAvailableGroupOptions: function (sScope) {
+            var oModel = this.getView().getModel("admin");
+            var sBase  = "/" + sScope;
+
+            var sReqType = oModel.getProperty(sBase + "/newRequestorType");
+            var sAppType = oModel.getProperty(sBase + "/newApproverType");
+
+            var aStagedReq = oModel.getProperty(sBase + "/" + (sScope === "pm" ? "pendingRequestors" : "requestors")) || [];
+            var aStagedApp = oModel.getProperty(sBase + "/" + (sScope === "pm" ? "pendingApprovers"  : "approvers"))  || [];
+
+            var aReqStagedKeys = aStagedReq
+                .filter(function (r) { return r.type === sReqType; })
+                .map(function (r) { return r.value; });
+            var aAppStagedKeys = aStagedApp
+                .filter(function (a) { return a.type === sAppType; })
+                .map(function (a) { return a.value; });
+
+            var aReqAvailable = (SUGGESTIONS[sReqType] || []).filter(function (item) {
+                return aReqStagedKeys.indexOf(item.key) === -1;
+            });
+            var aAppAvailable = (SUGGESTIONS[sAppType] || []).filter(function (item) {
+                return aAppStagedKeys.indexOf(item.key) === -1;
+            });
+
+            oModel.setProperty(sBase + "/filteredRequestorSuggestions", aReqAvailable);
+            oModel.setProperty(sBase + "/filteredApproverSuggestions", aAppAvailable);
+        },
+
+        _refreshCopySourceSuggestions: function () {
+            var oModel = this.getView().getModel("admin");
+            var aMappings = oModel.getProperty("/pm/mappings") || [];
+            var aSuggestions = aMappings.map(function (m) {
+                return {
+                    key: m.project,
+                    text: m.project + " — " + m.requestors.length + " requestor(s), " +
+                          m.approvers.length + " approver(s)"
+                };
+            });
+            oModel.setProperty("/pm/copySourceSuggestions", aSuggestions);
+        },
+
+        _refreshAvailableProjects: function () {
+            var oModel = this.getView().getModel("admin");
+            var aMappings = oModel.getProperty("/pm/mappings") || [];
+            var aMappedKeys = aMappings.map(function (m) { return m.project; });
+            var aAvailable = SUGGESTIONS.projects.filter(function (p) {
+                return aMappedKeys.indexOf(p.key) === -1;
+            });
+            oModel.setProperty("/pm/filteredProjectSuggestions", aAvailable);
         },
 
         // ═══ Save / Delete project mapping ═══════════════════════════
@@ -343,9 +494,11 @@ sap.ui.define([
             oModel.setProperty("/pm/mappings", aMappings);
             oModel.setProperty("/pm/count", aMappings.length);
 
-            oModel.setProperty("/pm/newProject", "");
-            oModel.setProperty("/pm/pendingRequestors", []);
-            oModel.setProperty("/pm/pendingApprovers", []);
+            // Reset form back to chooser state
+            this._resetPmForm();
+            // Refresh copy-source list and available-projects list to reflect the new mapping
+            this._refreshCopySourceSuggestions();
+            this._refreshAvailableProjects();
         },
 
         onPmDelete: function (oEvent) {
@@ -364,9 +517,11 @@ sap.ui.define([
                             aMappings.splice(iIndex, 1);
                             oModel.setProperty("/pm/mappings", aMappings);
                             oModel.setProperty("/pm/count", aMappings.length);
+                            this._refreshCopySourceSuggestions();
+                            this._refreshAvailableProjects();
                             MessageToast.show("Project mapping removed.");
                         }
-                    }
+                    }.bind(this)
                 }
             );
         },
@@ -393,70 +548,70 @@ sap.ui.define([
                 filteredRequestorSuggestions: SUGGESTIONS.SFDynamic,
                 filteredApproverSuggestions: SUGGESTIONS.SFDynamic
             });
+            // Apply dedup so existing tokens drop out of the dropdowns immediately
+            this._recomputeAvailableGroupOptions("pmEdit");
 
             this.byId("pmEditDialog").open();
         },
 
         onPmEditRequestorTypeChange: function () {
             var oModel = this.getView().getModel("admin");
-            var sType  = oModel.getProperty("/pmEdit/newRequestorType");
-            oModel.setProperty("/pmEdit/filteredRequestorSuggestions", SUGGESTIONS[sType] || []);
             oModel.setProperty("/pmEdit/newRequestorValue", "");
+            this._recomputeAvailableGroupOptions("pmEdit");
         },
 
         onPmEditApproverTypeChange: function () {
             var oModel = this.getView().getModel("admin");
-            var sType  = oModel.getProperty("/pmEdit/newApproverType");
-            oModel.setProperty("/pmEdit/filteredApproverSuggestions", SUGGESTIONS[sType] || []);
             oModel.setProperty("/pmEdit/newApproverValue", "");
+            this._recomputeAvailableGroupOptions("pmEdit");
         },
 
-        onPmEditAddRequestor: function () {
+        onPmEditRequestorSelectionChange: function (oEvent) {
             var oModel = this.getView().getModel("admin");
-            var sType  = oModel.getProperty("/pmEdit/newRequestorType");
-            var sVal   = (oModel.getProperty("/pmEdit/newRequestorValue") || "").trim();
-            if (!sVal) {
-                MessageToast.show("Select or type a requestor group.");
-                return;
-            }
-            var sKey = this._extractKey(sVal);
+            var oItem  = oEvent.getParameter("selectedItem");
+            if (!oItem) { return; }
+            var sKey  = oItem.getKey();
+            var sType = oModel.getProperty("/pmEdit/newRequestorType");
+
             var arr  = oModel.getProperty("/pmEdit/requestors").slice();
             var bDup = arr.some(function (r) { return r.type === sType && r.value === sKey; });
             if (bDup) {
                 MessageToast.show("\"" + sKey + "\" is already added.");
-                return;
+            } else {
+                arr.push({
+                    type: sType,
+                    value: sKey,
+                    display: "[" + typeLabel(sType) + "] " + sKey
+                });
+                oModel.setProperty("/pmEdit/requestors", arr);
             }
-            arr.push({
-                type: sType,
-                value: sKey,
-                display: "[" + typeLabel(sType) + "] " + sKey
-            });
-            oModel.setProperty("/pmEdit/requestors", arr);
             oModel.setProperty("/pmEdit/newRequestorValue", "");
+            oEvent.getSource().setSelectedKey("");
+            this._recomputeAvailableGroupOptions("pmEdit");
         },
 
-        onPmEditAddApprover: function () {
+        onPmEditApproverSelectionChange: function (oEvent) {
             var oModel = this.getView().getModel("admin");
-            var sType  = oModel.getProperty("/pmEdit/newApproverType");
-            var sVal   = (oModel.getProperty("/pmEdit/newApproverValue") || "").trim();
-            if (!sVal) {
-                MessageToast.show("Select or type an approver group.");
-                return;
-            }
-            var sKey = this._extractKey(sVal);
+            var oItem  = oEvent.getParameter("selectedItem");
+            if (!oItem) { return; }
+            var sKey  = oItem.getKey();
+            var sType = oModel.getProperty("/pmEdit/newApproverType");
+
             var arr  = oModel.getProperty("/pmEdit/approvers").slice();
             var bDup = arr.some(function (a) { return a.type === sType && a.value === sKey; });
             if (bDup) {
                 MessageToast.show("\"" + sKey + "\" is already added.");
-                return;
+            } else {
+                arr.push({
+                    type: sType,
+                    value: sKey,
+                    display: "[" + typeLabel(sType) + "] " + sKey
+                });
+                oModel.setProperty("/pmEdit/approvers", arr);
             }
-            arr.push({
-                type: sType,
-                value: sKey,
-                display: "[" + typeLabel(sType) + "] " + sKey
-            });
-            oModel.setProperty("/pmEdit/approvers", arr);
             oModel.setProperty("/pmEdit/newApproverValue", "");
+            oEvent.getSource().setSelectedKey("");
+            this._recomputeAvailableGroupOptions("pmEdit");
         },
 
         onPmEditRemoveRequestor: function (oEvent) {
@@ -469,6 +624,7 @@ sap.ui.define([
             var arr       = oModel.getProperty("/pmEdit/requestors").slice();
             arr.splice(iIndex, 1);
             oModel.setProperty("/pmEdit/requestors", arr);
+            this._recomputeAvailableGroupOptions("pmEdit");
         },
 
         onPmEditRemoveApprover: function (oEvent) {
@@ -481,6 +637,7 @@ sap.ui.define([
             var arr       = oModel.getProperty("/pmEdit/approvers").slice();
             arr.splice(iIndex, 1);
             oModel.setProperty("/pmEdit/approvers", arr);
+            this._recomputeAvailableGroupOptions("pmEdit");
         },
 
         onPmEditSave: function () {
@@ -529,6 +686,7 @@ sap.ui.define([
             oTarget.approversDisplay  = toDisplay(aAppClean);
 
             oModel.setProperty("/pm/mappings", aMappings);
+            this._refreshCopySourceSuggestions();
             this.byId("pmEditDialog").close();
             MessageToast.show("Mapping updated.");
         },
