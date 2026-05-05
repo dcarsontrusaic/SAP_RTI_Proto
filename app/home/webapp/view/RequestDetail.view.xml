@@ -146,8 +146,7 @@
                         </Toolbar>
                     </headerToolbar>
                     <content>
-                        <layout:VerticalLayout class="sapUiSmallMarginBegin sapUiMediumMarginEnd sapUiSmallMarginTop sapUiSmallMarginBottom" width="auto">
-
+                        <layout:VerticalLayout class="sapUiSmallMargin" width="auto">
                             <!-- Empty state -->
                             <VBox alignItems="Center"
                                   visible="{= ${detail>/commentCount} === 0}"
