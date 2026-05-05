@@ -76,12 +76,8 @@ sap.ui.define([
         onRequestPress: function (oEvent) {
             var oItem = oEvent.getSource();
             var oBindingContext = oItem.getBindingContext("view");
-            var sRequestId;
-            if (oBindingContext) {
-                sRequestId = oBindingContext.getProperty("ID");
-            } else {
-                sRequestId = oItem.getCells()[0].getText();
-            }
+            if (!oBindingContext) { return; }
+            var sRequestId = oBindingContext.getProperty("ID");
             if (!sRequestId) { return; }
             var oRouter = sap.ui.core.UIComponent.getRouterFor(this);
             oRouter.navTo("requestDetail", { requestId: sRequestId });

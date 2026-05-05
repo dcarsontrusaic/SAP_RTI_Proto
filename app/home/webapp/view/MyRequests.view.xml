@@ -46,13 +46,10 @@
 
                 <columns>
                     <Column width="10em">
-                        <Text text="Request ID"/>
+                        <Text text="Date Submitted"/>
                     </Column>
                     <Column>
                         <Text text="Language"/>
-                    </Column>
-                    <Column width="10em">
-                        <Text text="Date Submitted"/>
                     </Column>
                     <Column width="9em">
                         <Text text="Status"/>
@@ -65,9 +62,8 @@
                 <items>
                     <ColumnListItem type="Navigation" press="onRequestPress">
                         <cells>
-                            <Text text="{view>ID}"/>
-                            <Text text="{view>comparisonGroup}"/>
                             <Text text="{parts: ['view>submittedAt'], formatter: '.formatDate'}"/>
+                            <Text text="{view>comparisonGroup}"/>
                             <ObjectStatus
                                 text="{= ${view>status} === 'UnderReview' ? 'Under Review' : ${view>status}}"
                                 state="{= ${view>status} === 'Submitted' ? 'Information' :

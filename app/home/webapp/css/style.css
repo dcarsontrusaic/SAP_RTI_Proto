@@ -1,15 +1,60 @@
-.rtiCommentRequestor {
-    background: #e3f2fd;
-    border-radius: 12px;
-    border-top-right-radius: 2px;
-    padding: 0.75rem 1rem;
+/* ============================================================ */
+/* Discussion comment bubbles                                    */
+/* ============================================================ */
+
+/* Use !important to override SAPUI5's default flex container styles.
+   Target both the class itself and any nested flex container so the
+   background paints regardless of which element UI5 renders it on. */
+
+.rtiCommentRequestor,
+.rtiCommentRequestor.sapMFlexBox {
+    background-color: #d6ebff !important;
+    border-radius: 16px !important;
+    border-bottom-right-radius: 4px !important;
+    padding: 0.625rem 0.875rem !important;
+    margin-right: 2rem !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06) !important;
+    max-width: 80% !important;
+    box-sizing: border-box !important;
 }
 
-.rtiCommentResponder {
-    background: #f4f6f8;
-    border-radius: 12px;
-    border-top-left-radius: 2px;
-    padding: 0.75rem 1rem;
+.rtiCommentResponder,
+.rtiCommentResponder.sapMFlexBox {
+    background-color: #eef0f3 !important;
+    border-radius: 16px !important;
+    border-bottom-left-radius: 4px !important;
+    padding: 0.625rem 0.875rem !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06) !important;
+    max-width: 80% !important;
+    box-sizing: border-box !important;
+}
+
+/* Header row inside a bubble (author + timestamp) */
+.rtiCommentHeader {
+    margin-bottom: 0.25rem;
+}
+
+.rtiCommentAuthor .sapMText {
+    font-weight: 600 !important;
+    font-size: 0.8125rem !important;
+    color: #354a5e !important;
+}
+
+.rtiCommentTimestamp .sapMText {
+    font-size: 0.75rem !important;
+    color: #6a6d70 !important;
+}
+
+.rtiCommentSeparator .sapMText {
+    color: #b3b3b3 !important;
+    margin: 0 0.4rem !important;
+}
+
+.rtiCommentMessage .sapMText,
+.rtiCommentMessage {
+    font-size: 0.9rem !important;
+    line-height: 1.45 !important;
+    color: #1d2d3e !important;
 }
 
 /* Suppress horizontal scrollbars on nested panels in the request detail view */
